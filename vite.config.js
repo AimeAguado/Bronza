@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    allowedHosts: ['ambrose-percolable-braylee.ngrok-free.dev'],
     proxy: {
       '/api': {
         target: 'http://localhost:4000',

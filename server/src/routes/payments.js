@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 import { requireAuth } from '../middleware/requireAuth.js'
+import { Order } from '../models/Order.js'
 
 const router = Router()
 
@@ -48,6 +49,8 @@ router.post('/preference', requireAuth, async (req, res) => {
   const failure = process.env.MP_FAILURE_URL || 'http://localhost:5173/'
   const pending = process.env.MP_PENDING_URL || 'http://localhost:5173/'
 
+  const externalReference = `bronza-${req.user.id}-${Date.now()}`
+
   try {
     const client = new MercadoPagoConfig({ accessToken })
     const preference = new Preference(client)
@@ -64,11 +67,8 @@ router.post('/preference', requireAuth, async (req, res) => {
           pending,
         },
         auto_return: 'approved',
-        external_reference: `bronza-${req.user.id}-${Date.now()}`,
-        metadata: {
-          user_id: req.user.id,
-          user_email: req.user.email,
-        },
+        external_reference: externalReference,
+        metadata: { user_id: req.user.id },
       },
     })
 
@@ -77,9 +77,20 @@ router.post('/preference', requireAuth, async (req, res) => {
       return res.status(502).json({ error: 'Mercado Pago no devolvió init_point.' })
     }
 
+    const total = mpItems.reduce((acc, i) => acc + i.unit_price * i.quantity, 0)
+    await Order.create({
+      userId: req.user.id,
+      items: mpItems.map((i) => ({ id: i.id, title: i.title, quantity: i.quantity, unit_price: i.unit_price })),
+      total,
+      status: 'pending',
+      externalReference,
+      preferenceId: result.id,
+    })
+
     return res.json({
       preference_id: result.id,
       init_point,
+      externalReference,
     })
   } catch (e) {
     console.error('Mercado Pago preference error:', e)

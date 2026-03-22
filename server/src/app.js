@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import authRoutes from './routes/auth.js'
 import paymentsRoutes from './routes/payments.js'
+import productsRoutes from './routes/products.js'
+import ordersRoutes from './routes/orders.js'
 
 export function createApp() {
   const app = express()
@@ -16,6 +18,8 @@ export function createApp() {
 
   app.use('/api/auth', authRoutes)
   app.use('/api/payments', paymentsRoutes)
+  app.use('/api/products', productsRoutes)
+  app.use('/api/orders', ordersRoutes)
 
   app.use((err, _req, res, _next) => {
     console.error(err)

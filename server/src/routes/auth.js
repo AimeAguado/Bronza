@@ -1,8 +1,7 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { randomUUID } from 'node:crypto'
-import { readUsers, writeUsers } from '../lib/store.js'
+import { User } from '../models/User.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 
 const router = Router()
@@ -14,7 +13,7 @@ function signToken(user) {
   const secret = process.env.JWT_SECRET
   if (!secret) throw new Error('JWT_SECRET no configurado')
   return jwt.sign(
-    { sub: user.id, email: user.email, name: user.name },
+    { sub: user.id, email: user.email, name: user.name, role: user.role },
     secret,
     { expiresIn: JWT_EXPIRES },
   )
@@ -38,25 +37,18 @@ router.post('/register', async (req, res) => {
         .json({ error: 'Nombre, email y contraseña (mín. 6) requeridos.' })
     }
 
-    const users = await readUsers()
-    if (users.some((u) => u.email === normalizedEmail)) {
+    const existing = await User.findOne({ email: normalizedEmail })
+    if (existing) {
       return res.status(409).json({ error: 'Ese email ya está registrado.' })
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
-    const user = {
-      id: randomUUID(),
-      name: trimmedName,
-      email: normalizedEmail,
-      passwordHash,
-    }
-    users.push(user)
-    await writeUsers(users)
+    const user = await User.create({ name: trimmedName, email: normalizedEmail, passwordHash })
 
     const token = signToken(user)
     return res.status(201).json({
       token,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
     })
   } catch (e) {
     console.error(e)
@@ -71,8 +63,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email y contraseña requeridos.' })
     }
     const normalizedEmail = email.trim().toLowerCase()
-    const users = await readUsers()
-    const user = users.find((u) => u.email === normalizedEmail)
+    const user = await User.findOne({ email: normalizedEmail })
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ error: 'Email o contraseña incorrectos.' })
     }
@@ -80,7 +71,7 @@ router.post('/login', async (req, res) => {
     const token = signToken(user)
     return res.json({
       token,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
     })
   } catch (e) {
     console.error(e)
@@ -94,6 +85,7 @@ router.get('/me', requireAuth, (req, res) => {
       id: req.user.id,
       email: req.user.email,
       name: req.user.name,
+      role: req.user.role,
     },
   })
 })

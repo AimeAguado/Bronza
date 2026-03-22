@@ -142,8 +142,6 @@ const Checkout = () => {
         ) : payUrl ? (
           <a
             href={payUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#009EE3] px-6 py-4 font-bold text-xs uppercase tracking-widest text-white shadow-sm transition-all hover:brightness-110"
           >
             Pagar con Mercado Pago
@@ -191,3 +189,5 @@ const Checkout = () => {
     </div>
   )
 }
+
+export default Checkout

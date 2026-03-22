@@ -1,54 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Plus, Minus, User, Database } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from './context/useCart.js';
 import { useAuth } from './hooks/useAuth.js';
-
-const PRODUCTS = [
-  {
-    id: 1,
-    name: "The Shell",
-    category: "Heavyweight Hoodie",
-    color: "Shark Gray",
-    price: 145.00,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCMgt-P5xwcMuH8ODKNQApSfeYBH1mLPhHQTQmPXM_KG-BOjWOEuadoRVDz8_WFXC7xHw_2ruIQNRlDt8OC5zy5NtzVrOvo8WhpABlIkDqtXLFFG4o4zLKsI4wbdX1FIwEhVV8Saw63rle6KzmWF6fFXaf1ioYj6zy3DvwRZR3qvflWDtUUFoU5rPKdo477veLdkApucRGLSDLAhhxxJYLAAsPxnzVv3lvlaxLp7gT1cXEcmxgUSKfAu8BZWBGU-OtS4obEV_MWQ2dW",
-    volume: "Volume 01"
-  },
-  {
-    id: 2,
-    name: "Kinetic",
-    category: "Performance Jogger",
-    color: "Iron",
-    price: 110.00,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBKL48PSgOivAyDv7H9_ENMxqNFT3yBCKjsU6RP-IU6cwf3jobATgF3q7tzj2bC-PQb1QFTwjfnGnIzRfSPCnhoD3eE7vJOVwj_QzeZjuKR7msm_0xiv5xbOZH_DbX-fILE53gxkB0NPJKD0thXuJFR7B97ihyVw2tooWBmHRhPxONMExWLGD1iwPdj3r7aDS_JnVp744xB0cqv2ziqblS4ZPHE0FnqmtTnqaf-BdntThHrL-ZRw3pecig0lS4Jgl56AYJogvFpgSJ5",
-    volume: "Volume 02"
-  },
-  {
-    id: 3,
-    name: "Thermal",
-    category: "Insulated Vest",
-    color: "Off-white",
-    price: 180.00,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDYB4RvDcr1JRaZhYEpiNehLD7kp-qUip0wWRzkI2h_irxnoIiapN_CoPWFwH2dZj4x7v8v_Aq57noqxw-FppuUsCQ_dKWgEYDbjM36N8HpCAO5k5b54bIx4J7P3JA8OSu3HRdlsMpC99V_c8ldaXnTudZpVlTKxmRarJbMOqaN2yNvuxUQys5dOGwwwnfHQs-rg2xjd0Sf0hhqP1gRwDLPcHHJjMpLLdJ3S1mlMVKPIaQqO5294KFkNoGGXvQcRiqzJ7PbKOO55aNL",
-    volume: "Volume 03"
-  },
-  {
-    id: 4,
-    name: "Core",
-    category: "Essential Tee",
-    color: "Shark Gray",
-    price: 65.00,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDJgDCmISOO9rov6YTd68-AtIbHn9Y6tfVv-TLQ83nm8V1uxxZOmgk6E5U7MJy1G-n8Z1G1TGB53zdm6tAWJ8VuGpyiAIhPnqO1Toxxdm9GHjuk39BLVcEgoaCpdd5FO7FuUTnEHPE3RqaJJTMm44rNla2C2l8LbvxvTLhdFhfhlV_E-Ogmtdje5lxSQjpsteMwbkNwt1CVB38eWrDSMxTxwdjvmOe5aSUtmpUBxnhoFa8bum9FSuM7KkNYIhqEgT3PVaujYxedGlXJ",
-    volume: "Volume 04"
-  }
-];
+import { apiUrl } from './lib/api.js';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [products, setProducts] = useState([]);
   const navigate = useNavigate();
-  const { cart, addToCart, updateQty } = useCart();
-  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { cart, addToCart, updateQty, setCart } = useCart();
+  const { user, token } = useAuth();
+
+  useEffect(() => {
+    fetch(apiUrl('/api/products'))
+      .then((r) => r.json())
+      .then((data) => setProducts(data.products ?? []))
+      .catch(() => {})
+  }, []);
+
+  useEffect(() => {
+    const status = searchParams.get('payment');
+    if (!status) return;
+    setPaymentStatus(status);
+    setSearchParams({}, { replace: true });
+
+    const externalReference = searchParams.get('external_reference');
+    const collectionStatus = searchParams.get('collection_status');
+    if (externalReference && token) {
+      const confirmedStatus = collectionStatus === 'approved' ? 'approved'
+        : collectionStatus === 'rejected' ? 'rejected'
+        : 'pending';
+      fetch(apiUrl('/api/orders/confirm'), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ externalReference, status: confirmedStatus }),
+      }).catch(() => {})
+    }
+
+    if (status === 'success') setCart([]);
+  }, [token]);
 
   const handleAddToCart = (product) => {
     addToCart(product);
@@ -62,10 +56,7 @@ function App() {
       {/* HEADER */}
       <nav className="fixed inset-x-0 top-0 z-50 bg-background-light/80 backdrop-blur-md border-b border-accent-muted/40 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link
-            to="/"
-            className="flex items-center gap-2 cursor-pointer"
-          >
+          <Link to="/" className="flex items-center gap-2 cursor-pointer">
             <Database className="text-primary" size={24} />
             <span className="font-black tracking-tighter text-xl uppercase">BRONZA CLUB</span>
           </Link>
@@ -75,6 +66,16 @@ function App() {
             <a href="#" className="hover:text-primary transition-colors">Best Sellers</a>
           </div>
           <div className="flex gap-4 sm:gap-5 items-center">
+            {user?.role === 'admin' && (
+              <Link to="/admin/products" className="text-[10px] font-bold uppercase tracking-wider text-primary hover:underline">
+                Admin
+              </Link>
+            )}
+            {user && (
+              <Link to="/orders" className="text-[10px] font-bold uppercase tracking-wider text-text-main/60 hover:text-primary transition-colors">
+                Pedidos
+              </Link>
+            )}
             <button
               type="button"
               onClick={() => navigate('/login')}
@@ -101,10 +102,37 @@ function App() {
         </div>
       </nav>
 
+      {/* PAYMENT STATUS BANNER */}
+      <AnimatePresence>
+        {paymentStatus && (
+          <m.div
+            initial={{ y: -60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -60, opacity: 0 }}
+            className={`fixed top-[72px] inset-x-0 z-40 flex items-center justify-between px-6 py-3 text-sm font-bold uppercase tracking-widest ${
+              paymentStatus === 'success'
+                ? 'bg-green-600 text-white'
+                : paymentStatus === 'failure'
+                ? 'bg-red-600 text-white'
+                : 'bg-yellow-500 text-black'
+            }`}
+          >
+            <span>
+              {paymentStatus === 'success' && 'Pago aprobado. Gracias por tu compra!'}
+              {paymentStatus === 'failure' && 'El pago fue rechazado. Intenta de nuevo.'}
+              {paymentStatus === 'pending' && 'Pago pendiente de acreditacion.'}
+            </span>
+            <button type="button" onClick={() => setPaymentStatus(null)}>
+              <X size={16} />
+            </button>
+          </m.div>
+        )}
+      </AnimatePresence>
+
       {/* HERO */}
       <section className="relative min-h-[calc(100svh-5rem)] flex items-center justify-center bg-background-light">
-        <img 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVsA_MnRyKEP0nf5NhhobxseMODstCYkiFWbk9PhW1_U10Z74agE8nKKiRtjsyT526v33Rj244mBrPHgN-zPEGiJktP2iqLUsU4qTlqf5msE4kXFJKfT72mWbm0ag-RH1DYm9Vkc3EtE22RlY1Hu3XBvgblDfnzIXNaLzJp-A21D1OikkQPoYMyW1ks9tPqS3zxfP7LajQ-ROHDwMCyld9hB8jZ1uhOm0oNZT7N-OraXKrRFBkINsD28Gty1k_WD8JWhSyzX0HFFUQ" 
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVsA_MnRyKEP0nf5NhhobxseMODstCYkiFWbk9PhW1_U10Z74agE8nKKiRtjsyT526v33Rj244mBrPHgN-zPEGiJktP2iqLUsU4qTlqf5msE4kXFJKfT72mWbm0ag-RH1DYm9Vkc3EtE22RlY1Hu3XBvgblDfnzIXNaLzJp-A21D1OikkQPoYMyW1ks9tPqS3zxfP7LajQ-ROHDwMCyld9hB8jZ1uhOm0oNZT7N-OraXKrRFBkINsD28Gty1k_WD8JWhSyzX0HFFUQ"
           className="absolute inset-0 w-full h-full object-contain grayscale brightness-75"
         />
         <div className="relative z-10 text-center px-6">
@@ -123,12 +151,12 @@ function App() {
           <p className="max-w-xs text-sm text-text-main/50 uppercase tracking-wider font-medium italic">High-performance recovery apparel designed for post-training excellence.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {PRODUCTS.map(p => (
-            <div key={p.id} className="group">
+          {products.map(p => (
+            <div key={p._id} className="group">
               <div className="aspect-[3/4] overflow-hidden bg-accent-muted/20 rounded-xl relative mb-6">
                 <img src={p.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
-                <button 
-                  onClick={() => handleAddToCart(p)}
+                <button
+                  onClick={() => handleAddToCart({ ...p, id: p._id })}
                   className="absolute bottom-4 left-4 right-4 bg-text-main text-white py-4 rounded-lg font-bold text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all"
                 >
                   Quick Add +
