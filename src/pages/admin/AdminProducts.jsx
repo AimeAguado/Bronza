@@ -5,10 +5,24 @@ import { apiUrl } from '../../lib/api.js'
 
 const EMPTY_FORM = { name: '', category: '', color: '', price: '', image: '', volume: '', stock: '' }
 
+async function uploadImage(file, token) {
+  const formData = new FormData()
+  formData.append('image', file)
+  const res = await fetch(apiUrl('/api/products/upload'), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error ?? 'Error al subir imagen.')
+  return data.url
+}
+
 export default function AdminProducts() {
   const { token } = useAuth()
   const [products, setProducts] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
+  const [imageFile, setImageFile] = useState(null)
   const [editing, setEditing] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -38,7 +52,15 @@ export default function AdminProducts() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    const body = { ...form, price: Number(form.price), stock: Number(form.stock) }
+    let imageUrl = form.image
+    if (imageFile) {
+      try {
+        imageUrl = await uploadImage(imageFile, token)
+      } catch (err) {
+        return setError(err.message)
+      }
+    }
+    const body = { ...form, image: imageUrl, price: Number(form.price), stock: Number(form.stock) }
     const url = editing ? apiUrl(`/api/products/${editing}`) : apiUrl('/api/products')
     const method = editing ? 'PATCH' : 'POST'
     const res = await fetch(url, {
@@ -49,6 +71,7 @@ export default function AdminProducts() {
     const data = await res.json()
     if (!res.ok) return setError(data.error ?? 'Error al guardar.')
     setForm(EMPTY_FORM)
+    setImageFile(null)
     setEditing(null)
     fetchProducts()
   }
@@ -99,14 +122,19 @@ export default function AdminProducts() {
             ))}
           </div>
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider mb-1">URL de imagen</label>
+            <label className="block text-xs font-bold uppercase tracking-wider mb-1">Imagen (JPG, PNG, WEBP)</label>
             <input
-              type="url"
-              value={form.image}
-              onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-              placeholder="https://..."
-              className="w-full rounded-lg border border-accent-muted/60 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+              className="w-full text-sm text-text-main/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:bg-primary file:text-white hover:file:brightness-110 cursor-pointer"
             />
+            {(imageFile || form.image) && (
+              <img
+                src={imageFile ? URL.createObjectURL(imageFile) : form.image}
+                className="mt-2 h-20 w-20 object-cover rounded-lg border border-accent-muted/40"
+              />
+            )}
           </div>
           {error && <p className="text-xs text-red-600">{error}</p>}
           <div className="flex gap-3">

@@ -1,9 +1,14 @@
 import express from 'express'
 import cors from 'cors'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { connectDB } from './lib/db.js'
 import authRoutes from './routes/auth.js'
 import paymentsRoutes from './routes/payments.js'
 import productsRoutes from './routes/products.js'
 import ordersRoutes from './routes/orders.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export function createApp() {
   const app = express()
@@ -11,6 +16,7 @@ export function createApp() {
   const origin = process.env.CORS_ORIGIN?.split(',').map((s) => s.trim()) || true
   app.use(cors({ origin, credentials: true }))
   app.use(express.json({ limit: '1mb' }))
+  app.use((_req, _res, next) => connectDB().then(next).catch(next))
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true })

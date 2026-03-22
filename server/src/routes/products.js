@@ -1,8 +1,36 @@
 import { Router } from 'express'
+import multer from 'multer'
+import { v2 as cloudinary } from 'cloudinary'
 import { Product } from '../models/Product.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp']
+    cb(null, allowed.includes(file.mimetype))
+  },
+})
+
 const router = Router()
+
+router.post('/upload', requireAdmin, upload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Archivo inválido. Solo JPG, PNG o WEBP.' })
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'bronza-products' },
+        (err, result) => (err ? reject(err) : resolve(result)),
+      )
+      stream.end(req.file.buffer)
+    })
+    return res.json({ url: result.secure_url })
+  } catch (e) {
+    console.error('Cloudinary upload error:', e)
+    return res.status(500).json({ error: 'Error al subir imagen.' })
+  }
+})
 
 router.get('/', async (_req, res) => {
   try {

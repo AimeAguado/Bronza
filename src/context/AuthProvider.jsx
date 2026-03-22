@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let cancelled = false
     async function init() {
-      const stored = sessionStorage.getItem(TOKEN_KEY)
+      const stored = localStorage.getItem(TOKEN_KEY)
       if (!stored) {
         setReady(true)
         return
@@ -23,14 +23,14 @@ export function AuthProvider({ children }) {
           headers: { Authorization: `Bearer ${stored}` },
         })
         if (!res.ok) {
-          sessionStorage.removeItem(TOKEN_KEY)
+          localStorage.removeItem(TOKEN_KEY)
           setToken(null)
         } else {
           const data = await res.json()
           if (!cancelled) setUser(data.user)
         }
       } catch {
-        sessionStorage.removeItem(TOKEN_KEY)
+        localStorage.removeItem(TOKEN_KEY)
         setToken(null)
       } finally {
         if (!cancelled) setReady(true)
@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
           error: data.error || 'Error al iniciar sesión.',
         }
       }
-      sessionStorage.setItem(TOKEN_KEY, data.token)
+      localStorage.setItem(TOKEN_KEY, data.token)
       setToken(data.token)
       setUser(data.user)
       return { ok: true }
@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
           error: data.error || 'Error al registrarse.',
         }
       }
-      sessionStorage.setItem(TOKEN_KEY, data.token)
+      localStorage.setItem(TOKEN_KEY, data.token)
       setToken(data.token)
       setUser(data.user)
       return { ok: true }
@@ -89,7 +89,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   const logout = useCallback(() => {
-    sessionStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(TOKEN_KEY)
     setToken(null)
     setUser(null)
   }, [])

@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 server/data
+server/uploads
 
 # Env (no subir claves / URLs privadas)
 .env

@@ -71,7 +71,7 @@ function App() {
                 Admin
               </Link>
             )}
-            {user && (
+            {user && user.role !== 'admin' && (
               <Link to="/orders" className="text-[10px] font-bold uppercase tracking-wider text-text-main/60 hover:text-primary transition-colors">
                 Pedidos
               </Link>

@@ -27,14 +27,18 @@ export default function AdminOrders() {
   const { token } = useAuth()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetch(apiUrl('/api/orders/admin'), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
-      .then((data) => setOrders(data.orders ?? []))
-      .catch(() => {})
+      .then((data) => {
+        console.log('[AdminOrders] response:', data)
+        setOrders(data.orders ?? [])
+      })
+      .catch((e) => console.error('[AdminOrders] fetch error:', e))
       .finally(() => setLoading(false))
   }, [token])
 
