@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, X, Plus, Minus, User, Database } from 'lucide-react';
+import { ShoppingBag, X, Plus, Minus, Trash2, User, Database } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from './context/useCart.js';
 import { useAuth } from './hooks/useAuth.js';
@@ -12,7 +12,7 @@ function App() {
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { cart, addToCart, updateQty, setCart } = useCart();
+  const { cart, addToCart, updateQty, removeFromCart, setCart } = useCart();
   const { user, token, ready } = useAuth();
 
   useEffect(() => {
@@ -202,13 +202,20 @@ function App() {
                         <h4>{item.name}</h4>
                         <p>${item.price * item.qty}</p>
                       </div>
-                      <p className="text-xs text-text-main/50 mb-4 uppercase">{item.category}</p>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 mt-4">
                         <div className="flex items-center border border-accent-muted rounded px-2 gap-4">
                           <Minus size={14} className="cursor-pointer" onClick={() => updateQty(item.id, -1)} />
                           <span className="font-bold text-sm">{item.qty}</span>
                           <Plus size={14} className="cursor-pointer" onClick={() => updateQty(item.id, 1)} />
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.id)}
+                          className="rounded-lg p-1.5 text-text-main/30 transition-colors hover:bg-red-50 hover:text-red-500"
+                          aria-label={`Eliminar ${item.name}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </div>
                   </div>

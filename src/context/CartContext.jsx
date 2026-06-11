@@ -45,9 +45,13 @@ export function CartProvider({ children }) {
     )
   }, [])
 
+  const removeFromCart = useCallback((id) => {
+    setCart((prev) => prev.filter((item) => item.id !== id))
+  }, [])
+
   const value = useMemo(
-    () => ({ cart, setCart, addToCart, updateQty }),
-    [cart, addToCart, updateQty],
+    () => ({ cart, setCart, addToCart, updateQty, removeFromCart }),
+    [cart, addToCart, updateQty, removeFromCart],
   )
 
   return (
