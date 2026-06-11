@@ -20,6 +20,7 @@ const Checkout = () => {
   const [payUrl, setPayUrl] = useState('')
   const [payLoading, setPayLoading] = useState(true)
   const [payError, setPayError] = useState('')
+  const [testMode, setTestMode] = useState(false)
 
   const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0)
 
@@ -56,6 +57,7 @@ const Checkout = () => {
           const data = await res.json().catch(() => ({}))
           if (!cancelled && res.ok && data.init_point) {
             setPayUrl(data.init_point)
+            setTestMode(Boolean(data.testMode))
             setPayLoading(false)
             return
           }
@@ -140,12 +142,59 @@ const Checkout = () => {
             Preparando pago...
           </p>
         ) : payUrl ? (
-          <a
-            href={payUrl}
-            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#009EE3] px-6 py-4 font-bold text-xs uppercase tracking-widest text-white shadow-sm transition-all hover:brightness-110"
-          >
-            Pagar con Mercado Pago
-          </a>
+          <>
+            {testMode ? (
+              <div className="mt-6 rounded-xl border border-[#009EE3]/30 bg-[#009EE3]/5 p-4 text-sm text-text-main/80">
+                <p className="font-semibold text-text-main">Modo prueba (sandbox)</p>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs">
+                  <li>
+                    Abrí el checkout en una ventana de incógnito (evita mezclar
+                    sesiones reales con la de prueba).
+                  </li>
+                  <li>
+                    Iniciá sesión con tu cuenta de comprador de prueba (no la del
+                    vendedor). La creás en{' '}
+                    <a
+                      href="https://www.mercadopago.com.ar/developers/panel/app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline"
+                    >
+                      Tus integraciones → Cuentas de prueba
+                    </a>
+                    .
+                  </li>
+                  <li>
+                    Con tarjeta de prueba: Visa{' '}
+                    <code className="rounded bg-accent-muted/30 px-1">
+                      4509 9535 6623 3704
+                    </code>
+                    , vencimiento{' '}
+                    <code className="rounded bg-accent-muted/30 px-1">11/30</code>
+                    , CVV{' '}
+                    <code className="rounded bg-accent-muted/30 px-1">123</code>
+                    , titular{' '}
+                    <code className="rounded bg-accent-muted/30 px-1">APRO</code>
+                    , DNI{' '}
+                    <code className="rounded bg-accent-muted/30 px-1">
+                      12345678
+                    </code>
+                    .
+                  </li>
+                </ol>
+                <p className="mt-2 text-xs text-text-main/60">
+                  Si el botón &quot;Pagar&quot; sigue deshabilitado, faltan datos
+                  del formulario o la sesión no es la del comprador de prueba.
+                </p>
+              </div>
+            ) : null}
+            <a
+              href={payUrl}
+              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#009EE3] px-6 py-4 font-bold text-xs uppercase tracking-widest text-white shadow-sm transition-all hover:brightness-110"
+            >
+              Pagar con Mercado Pago
+            </a>
+          </>
         ) : (
           <div className="mt-6 rounded-xl border border-accent-muted/60 bg-white/40 p-4 text-sm text-text-main/80">
             <p className="font-semibold text-text-main">

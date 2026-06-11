@@ -13,7 +13,7 @@ function App() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { cart, addToCart, updateQty, setCart } = useCart();
-  const { user, token } = useAuth();
+  const { user, token, ready } = useAuth();
 
   useEffect(() => {
     fetch(apiUrl('/api/products'))
@@ -23,26 +23,38 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
+
     const status = searchParams.get('payment');
     if (!status) return;
+
+    const externalReference = searchParams.get('external_reference');
+    const collectionStatus =
+      searchParams.get('collection_status') || searchParams.get('status');
+
     setPaymentStatus(status);
     setSearchParams({}, { replace: true });
 
-    const externalReference = searchParams.get('external_reference');
-    const collectionStatus = searchParams.get('collection_status');
-    if (externalReference && token) {
-      const confirmedStatus = collectionStatus === 'approved' ? 'approved'
-        : collectionStatus === 'rejected' ? 'rejected'
-        : 'pending';
-      fetch(apiUrl('/api/orders/confirm'), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ externalReference, status: confirmedStatus }),
-      }).catch(() => {})
-    }
-
     if (status === 'success') setCart([]);
-  }, [token]);
+
+    if (!externalReference || !token) return;
+
+    const confirmedStatus =
+      collectionStatus === 'approved'
+        ? 'approved'
+        : collectionStatus === 'rejected'
+          ? 'rejected'
+          : 'pending';
+
+    fetch(apiUrl('/api/orders/confirm'), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ externalReference, status: confirmedStatus }),
+    }).catch(() => {});
+  }, [ready, token, searchParams, setSearchParams, setCart]);
 
   const handleAddToCart = (product) => {
     addToCart(product);

@@ -45,34 +45,56 @@ router.post('/preference', requireAuth, async (req, res) => {
     })
   }
 
-  const success = process.env.MP_SUCCESS_URL || 'http://localhost:5173/'
-  const failure = process.env.MP_FAILURE_URL || 'http://localhost:5173/'
-  const pending = process.env.MP_PENDING_URL || 'http://localhost:5173/'
+  const appBase = process.env.APP_URL?.replace(/\/$/, '')
+  const success =
+    process.env.MP_SUCCESS_URL ||
+    (appBase ? `${appBase}/?payment=success` : 'http://localhost:5173/?payment=success')
+  const failure =
+    process.env.MP_FAILURE_URL ||
+    (appBase ? `${appBase}/?payment=failure` : 'http://localhost:5173/?payment=failure')
+  const pending =
+    process.env.MP_PENDING_URL ||
+    (appBase ? `${appBase}/?payment=pending` : 'http://localhost:5173/?payment=pending')
 
   const externalReference = `bronza-${req.user.id}-${Date.now()}`
+
+  const testMode = accessToken.startsWith('TEST-')
+  const localBackUrls = [success, failure, pending].some((url) =>
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(url),
+  )
 
   try {
     const client = new MercadoPagoConfig({ accessToken })
     const preference = new Preference(client)
-    const result = await preference.create({
-      body: {
-        items: mpItems,
-        payer: {
-          email: req.user.email,
-          name: req.user.name,
-        },
-        back_urls: {
-          success,
-          failure,
-          pending,
-        },
-        auto_return: 'approved',
-        external_reference: externalReference,
-        metadata: { user_id: req.user.id },
-      },
-    })
 
-    const init_point = result.init_point
+    const preferenceBody = {
+      items: mpItems,
+      back_urls: {
+        success,
+        failure,
+        pending,
+      },
+      external_reference: externalReference,
+      metadata: { user_id: req.user.id },
+    }
+
+    // En sandbox el email de Bronza suele no coincidir con el comprador de
+    // prueba logueado en MP y el botón "Pagar" queda deshabilitado.
+    if (!testMode) {
+      preferenceBody.payer = {
+        email: req.user.email,
+        name: req.user.name,
+      }
+    }
+
+    // MP no acepta auto_return con localhost; requiere URL pública (APP_URL/ngrok).
+    if (!localBackUrls) {
+      preferenceBody.auto_return = 'approved'
+    }
+
+    const result = await preference.create({ body: preferenceBody })
+
+    const init_point = result.init_point || result.sandbox_init_point
     if (!init_point) {
       return res.status(502).json({ error: 'Mercado Pago no devolvió init_point.' })
     }
@@ -91,6 +113,7 @@ router.post('/preference', requireAuth, async (req, res) => {
       preference_id: result.id,
       init_point,
       externalReference,
+      testMode,
     })
   } catch (e) {
     console.error('Mercado Pago preference error:', e)
