@@ -34,7 +34,7 @@ router.post('/upload', requireAdmin, upload.single('image'), async (req, res) =>
 
 router.get('/', async (_req, res) => {
   try {
-    const products = await Product.find({ active: true }).sort({ createdAt: 1 })
+    const products = await Product.find({ active: true }).sort({ createdAt: -1 })
     return res.json({ products })
   } catch (e) {
     console.error(e)
@@ -42,13 +42,32 @@ router.get('/', async (_req, res) => {
   }
 })
 
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+    if (!product || !product.active) {
+      return res.status(404).json({ error: 'Producto no encontrado.' })
+    }
+    return res.json({ product })
+  } catch (e) {
+    console.error(e)
+    return res.status(500).json({ error: 'Error al obtener producto.' })
+  }
+})
+
 router.post('/', requireAdmin, async (req, res) => {
   try {
-    const { name, category, color, price, image, volume, stock } = req.body || {}
+    const { name, category, price, sizes, variants } = req.body || {}
     if (!name || price == null) {
       return res.status(400).json({ error: 'Nombre y precio son requeridos.' })
     }
-    const product = await Product.create({ name, category, color, price, image, volume, stock: stock ?? 0 })
+    const product = await Product.create({
+      name,
+      category,
+      price,
+      sizes: sizes ?? [],
+      variants: variants ?? [],
+    })
     return res.status(201).json({ product })
   } catch (e) {
     console.error(e)
@@ -58,15 +77,13 @@ router.post('/', requireAdmin, async (req, res) => {
 
 router.patch('/:id', requireAdmin, async (req, res) => {
   try {
-    const { name, category, color, price, image, volume, stock, active } = req.body || {}
+    const { name, category, price, sizes, variants, active } = req.body || {}
     const update = {}
     if (name !== undefined) update.name = name
     if (category !== undefined) update.category = category
-    if (color !== undefined) update.color = color
     if (price !== undefined) update.price = price
-    if (image !== undefined) update.image = image
-    if (volume !== undefined) update.volume = volume
-    if (stock !== undefined) update.stock = stock
+    if (sizes !== undefined) update.sizes = sizes
+    if (variants !== undefined) update.variants = variants
     if (active !== undefined) update.active = active
 
     const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true })

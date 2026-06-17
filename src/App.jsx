@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { motion as m, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Plus, Minus, Trash2, User, Database } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from './context/useCart.js';
 import { useAuth } from './hooks/useAuth.js';
 import { apiUrl } from './lib/api.js';
+import ProductModal from './components/ProductModal.jsx';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { cart, addToCart, updateQty, removeFromCart, setCart } = useCart();
@@ -56,10 +59,20 @@ function App() {
     }).catch(() => {});
   }, [ready, token, searchParams, setSearchParams, setCart]);
 
-  const handleAddToCart = (product) => {
-    addToCart(product);
+  function openModal(product) {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  }
+
+  function closeModal() {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  }
+
+  function handleAddFromModal(item) {
+    addToCart(item);
     setIsCartOpen(true);
-  };
+  }
 
   const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
 
@@ -117,7 +130,7 @@ function App() {
       {/* PAYMENT STATUS BANNER */}
       <AnimatePresence>
         {paymentStatus && (
-          <m.div
+          <Motion.div
             initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -60, opacity: 0 }}
@@ -137,7 +150,7 @@ function App() {
             <button type="button" onClick={() => setPaymentStatus(null)}>
               <X size={16} />
             </button>
-          </m.div>
+          </Motion.div>
         )}
       </AnimatePresence>
 
@@ -148,10 +161,10 @@ function App() {
           className="absolute inset-0 w-full h-full object-contain grayscale brightness-75"
         />
         <div className="relative z-10 text-center px-6">
-          <m.span initial={{opacity:0}} animate={{opacity:1}} className="text-text-main font-bold tracking-[0.5em] text-xs uppercase mb-6 block">Summer 2024 Collection</m.span>
-          <m.h1 initial={{y:30, opacity:0}} animate={{y:0, opacity:1}} className="text-7xl md:text-[10rem] font-black tracking-tighter uppercase leading-[0.85] mb-8">
+          <Motion.span initial={{opacity:0}} animate={{opacity:1}} className="text-text-main font-bold tracking-[0.5em] text-xs uppercase mb-6 block">Summer 2024 Collection</Motion.span>
+          <Motion.h1 initial={{y:30, opacity:0}} animate={{y:0, opacity:1}} className="text-7xl md:text-[10rem] font-black tracking-tighter uppercase leading-[0.85] mb-8">
             BRONZA<br/><span className="text-text-main/40">CLUB</span>
-          </m.h1>
+          </Motion.h1>
           <button className="bg-text-main text-background-light px-12 py-5 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-primary transition-all scale-110">Shop the Drop</button>
         </div>
       </section>
@@ -163,32 +176,45 @@ function App() {
           <p className="max-w-xs text-sm text-text-main/50 uppercase tracking-wider font-medium italic">High-performance recovery apparel designed for post-training excellence.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {products.map(p => (
-            <div key={p._id} className="group">
-              <div className="aspect-[3/4] overflow-hidden bg-accent-muted/20 rounded-xl relative mb-6">
-                <img src={p.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
-                <button
-                  onClick={() => handleAddToCart({ ...p, id: p._id })}
-                  className="absolute bottom-4 left-4 right-4 bg-text-main text-white py-4 rounded-lg font-bold text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all"
-                >
-                  Quick Add +
-                </button>
+          {products.map(p => {
+            const firstImg = p.variants?.[0]?.images?.[0]
+            return (
+              <div key={p._id} className="group cursor-pointer" onClick={() => openModal(p)}>
+                <div className="aspect-[3/4] overflow-hidden bg-accent-muted/20 rounded-xl relative mb-6">
+                  <img
+                    src={firstImg}
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                  />
+                  <span
+                    onClick={(e) => { e.stopPropagation(); openModal(p) }}
+                    className="absolute bottom-4 left-4 right-4 bg-text-main text-white py-4 rounded-lg font-bold text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all text-center block"
+                  >
+                    Quick View +
+                  </span>
+                </div>
+                <h3 className="font-bold text-xl uppercase mt-1 tracking-tight">{p.name}</h3>
+                <p className="text-text-main/50 text-sm uppercase tracking-tighter font-medium">{p.category}</p>
+                <p className="mt-2 font-bold">${p.price.toLocaleString('es-AR')}</p>
               </div>
-              <span className="text-primary font-bold text-[10px] uppercase tracking-widest">{p.volume}</span>
-              <h3 className="font-bold text-xl uppercase mt-1 tracking-tight">{p.name}</h3>
-              <p className="text-text-main/50 text-sm uppercase tracking-tighter font-medium">{p.category}</p>
-              <p className="mt-2 font-bold">${p.price}.00</p>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </main>
+
+      {/* PRODUCT MODAL */}
+      <ProductModal
+        product={selectedProduct}
+        open={isModalOpen}
+        onClose={closeModal}
+        onAddToCart={handleAddFromModal}
+      />
 
       {/* CART DRAWER */}
       <AnimatePresence>
         {isCartOpen && (
           <>
-            <m.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsCartOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
-            <m.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'spring', damping:30}} className="fixed right-0 top-0 h-full w-full max-w-md bg-background-light z-50 p-8 shadow-2xl flex flex-col">
+            <Motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsCartOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
+            <Motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} transition={{type:'spring', damping:30}} className="fixed right-0 top-0 h-full w-full max-w-md bg-background-light z-50 p-8 shadow-2xl flex flex-col">
               <div className="flex justify-between items-center mb-12">
                 <h2 className="text-3xl font-black uppercase tracking-tighter">Your Bag</h2>
                 <X className="cursor-pointer" onClick={() => setIsCartOpen(false)} />
@@ -202,6 +228,11 @@ function App() {
                         <h4>{item.name}</h4>
                         <p>${item.price * item.qty}</p>
                       </div>
+                      {(item.color || item.size) && (
+                        <p className="text-[10px] uppercase tracking-wider text-text-main/50 mt-1">
+                          {item.color}{item.color && item.size ? ' / ' : ''}{item.size}
+                        </p>
+                      )}
                       <div className="flex items-center gap-4 mt-4">
                         <div className="flex items-center border border-accent-muted rounded px-2 gap-4">
                           <Minus size={14} className="cursor-pointer" onClick={() => updateQty(item.id, -1)} />
@@ -237,7 +268,7 @@ function App() {
                   PROCEED TO CHECKOUT
                 </button>
               </div>
-            </m.div>
+          </Motion.div>
           </>
         )}
       </AnimatePresence>

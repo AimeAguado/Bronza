@@ -82,7 +82,10 @@ const Checkout = () => {
     }
   }, [token, cart])
 
-  const lines = cart.map((item) => `- ${item.name} x${item.qty}`).join('\n')
+  const lines = cart.map((item) => {
+    const opts = [item.color, item.size].filter(Boolean).join(' / ')
+    return `- ${item.name} x${item.qty}${opts ? ` (${opts})` : ''}`
+  }).join('\n')
   const supportMessage =
     'Hola! Consulta sobre mi pedido:\n\n' +
     lines +
@@ -113,11 +116,18 @@ const Checkout = () => {
               key={item.id}
               className="flex justify-between gap-4 border-b border-accent-muted/40 pb-3"
             >
-              <span>
-                {item.name}{' '}
-                <span className="text-text-main/60">x{item.qty}</span>
+              <span className="flex flex-col">
+                <span>
+                  {item.name}{' '}
+                  <span className="text-text-main/60">x{item.qty}</span>
+                </span>
+                {(item.color || item.size) && (
+                  <span className="text-[10px] uppercase tracking-wider text-text-main/40 mt-0.5">
+                    {item.color}{item.color && item.size ? ' / ' : ''}{item.size}
+                  </span>
+                )}
               </span>
-              <span className="font-semibold">
+              <span className="font-semibold shrink-0">
                 {formatMoney(item.price * item.qty)}
               </span>
             </li>

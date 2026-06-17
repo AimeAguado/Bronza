@@ -1,17 +1,18 @@
 import { Schema, model } from 'mongoose'
 
-const productSchema = new Schema(
-  {
-    name: { type: String, required: true, trim: true },
-    category: { type: String, trim: true },
-    color: { type: String, trim: true },
-    price: { type: Number, required: true },
-    image: { type: String, trim: true },
-    volume: { type: String, trim: true },
-    stock: { type: Number, default: 0 },
-    active: { type: Boolean, default: true },
-  },
-  { timestamps: true },
-)
+const variantSchema = new Schema({
+  color: { type: String, required: true, trim: true },
+  images: [{ type: String, trim: true }],
+  stock: { type: Map, of: Number, default: {} },
+}, { _id: false })
+
+const productSchema = new Schema({
+  name: { type: String, required: true, trim: true },
+  category: { type: String, trim: true },
+  price: { type: Number, required: true },
+  sizes: [{ type: String, trim: true }],
+  variants: [variantSchema],
+  active: { type: Boolean, default: true },
+}, { timestamps: true })
 
 export const Product = model('Product', productSchema)

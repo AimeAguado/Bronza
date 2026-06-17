@@ -27,7 +27,6 @@ export default function AdminOrders() {
   const { token } = useAuth()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     fetch(apiUrl('/api/orders/admin'), {
