@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Plus, Minus, Trash2, User, Database } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -6,6 +6,20 @@ import { useCart } from './context/useCart.js';
 import { useAuth } from './hooks/useAuth.js';
 import { apiUrl } from './lib/api.js';
 import ProductModal from './components/ProductModal.jsx';
+
+const COLLECTIONS = {
+  'winter-26': { label: 'Winter 26', categories: ['Sweters', 'Pantalones', 'Remeras'] },
+  'nightwear': { label: 'Nightwear', categories: ['Shorts', 'Chalecos', 'Bodys'] },
+  'summer-27': { label: 'Summer 27', categories: [] },
+};
+
+const HERO_IMAGES = [
+  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380397/bronza-products/abzeo3ezvicgs1yizaoq.jpg',
+  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380398/bronza-products/ifepbwmrnhfw515pcucc.jpg',
+  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380398/bronza-products/zpyusoux82tol5idck3v.jpg',
+  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380402/bronza-products/g6aorzkoyfpd4jli8l4k.jpg',
+  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380405/bronza-products/llcyigszegow9kf1u1wn.jpg',
+];
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -17,6 +31,47 @@ function App() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { cart, addToCart, updateQty, removeFromCart, setCart } = useCart();
   const { user, token, ready } = useAuth();
+  const productsRef = useRef(null);
+  const [activeCollection, setActiveCollection] = useState(null);
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  const filteredProducts =
+    activeCollection && COLLECTIONS[activeCollection]
+      ? products.filter((p) => COLLECTIONS[activeCollection].categories.includes(p.category))
+      : products;
+
+  function scrollToProducts() {
+    const el = productsRef.current;
+    if (!el) return;
+    const target = el.getBoundingClientRect().top + window.scrollY - 60;
+    const start = window.scrollY;
+    const distance = target - start;
+    const duration = 250;
+    let startTime = null;
+    function step(ts) {
+      if (!startTime) startTime = ts;
+      const progress = Math.min((ts - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      window.scrollTo(0, start + distance * ease);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  useEffect(() => {
+    if (activeCollection) scrollToProducts();
+  }, [activeCollection]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroIndex((i) => (i + 1) % HERO_IMAGES.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  function handleCollectionClick(slug) {
+    setActiveCollection(slug);
+  }
 
   useEffect(() => {
     fetch(apiUrl('/api/products'))
@@ -81,14 +136,25 @@ function App() {
       {/* HEADER */}
       <nav className="fixed inset-x-0 top-0 z-50 bg-background-light/80 backdrop-blur-md border-b border-accent-muted/40 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-2 cursor-pointer">
+          <button
+            type="button"
+            onClick={() => { setActiveCollection(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            className="flex items-center gap-2 cursor-pointer"
+          >
             <Database className="text-primary" size={24} />
             <span className="font-black tracking-tighter text-xl uppercase">BRONZA CLUB</span>
-          </Link>
+          </button>
           <div className="hidden md:flex gap-8 text-[10px] font-bold tracking-[0.3em] uppercase">
-            <a href="#" className="hover:text-primary transition-colors">Winter 26</a>
-            <a href="#" className="hover:text-primary transition-colors">Nightwear</a>
-            <a href="#" className="hover:text-primary transition-colors">Best Sellers</a>
+            {Object.entries(COLLECTIONS).map(([slug, { label }]) => (
+              <button
+                key={slug}
+                type="button"
+                onClick={() => handleCollectionClick(slug)}
+                className={`transition-colors ${activeCollection === slug ? 'text-primary' : 'hover:text-primary'}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           <div className="flex gap-4 sm:gap-5 items-center">
             {user?.role === 'admin' && (
@@ -155,28 +221,52 @@ function App() {
       </AnimatePresence>
 
       {/* HERO */}
-      <section className="relative min-h-[calc(100svh-5rem)] flex items-center justify-center bg-background-light">
-        <img
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVsA_MnRyKEP0nf5NhhobxseMODstCYkiFWbk9PhW1_U10Z74agE8nKKiRtjsyT526v33Rj244mBrPHgN-zPEGiJktP2iqLUsU4qTlqf5msE4kXFJKfT72mWbm0ag-RH1DYm9Vkc3EtE22RlY1Hu3XBvgblDfnzIXNaLzJp-A21D1OikkQPoYMyW1ks9tPqS3zxfP7LajQ-ROHDwMCyld9hB8jZ1uhOm0oNZT7N-OraXKrRFBkINsD28Gty1k_WD8JWhSyzX0HFFUQ"
-          className="absolute inset-0 w-full h-full object-contain grayscale brightness-75"
-        />
+      <section className="relative min-h-[calc(100svh-5rem)] flex items-center justify-center bg-background-light overflow-hidden">
+        <AnimatePresence mode="wait">
+          <Motion.img
+            key={heroIndex}
+            src={HERO_IMAGES[heroIndex]}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 w-full h-full object-cover grayscale brightness-75"
+          />
+        </AnimatePresence>
         <div className="relative z-10 text-center px-6">
-          <Motion.span initial={{opacity:0}} animate={{opacity:1}} className="text-text-main font-bold tracking-[0.5em] text-xs uppercase mb-6 block">Summer 2024 Collection</Motion.span>
+          <Motion.span initial={{opacity:0}} animate={{opacity:1}} className="text-text-main font-bold tracking-[0.5em] text-xs uppercase mb-6 block">Nightwear Collection</Motion.span>
           <Motion.h1 initial={{y:30, opacity:0}} animate={{y:0, opacity:1}} className="text-7xl md:text-[10rem] font-black tracking-tighter uppercase leading-[0.85] mb-8">
             BRONZA<br/><span className="text-text-main/40">CLUB</span>
           </Motion.h1>
-          <button className="bg-text-main text-background-light px-12 py-5 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-primary transition-all scale-110">Shop the Drop</button>
+          <button onClick={() => productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="bg-text-main text-background-light px-12 py-5 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-primary transition-all scale-110">Shop the Drop</button>
+          <div className="flex justify-center gap-2 mt-8">
+            {HERO_IMAGES.map((_, i) => (
+              <span
+                key={i}
+                className={`w-2 h-2 rounded-full transition-all ${i === heroIndex ? 'bg-text-main w-6' : 'bg-text-main/30'}`}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
       {/* PRODUCTS */}
       <main className="max-w-7xl mx-auto px-6 py-32">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
-          <h2 className="text-5xl font-black tracking-tighter uppercase">Chapter I: The Foundation</h2>
-          <p className="max-w-xs text-sm text-text-main/50 uppercase tracking-wider font-medium italic">High-performance recovery apparel designed for post-training excellence.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {products.map(p => {
+        {activeCollection === 'summer-27' ? (
+          <div ref={productsRef} className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+            <h2 className="text-5xl font-black tracking-tighter uppercase mb-6">Summer 27</h2>
+            <p className="text-text-main/50 uppercase tracking-widest font-bold text-sm">Próximamente</p>
+          </div>
+        ) : (
+          <>
+            <div ref={productsRef} className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
+              <h2 className="text-5xl font-black tracking-tighter uppercase">
+                {activeCollection ? COLLECTIONS[activeCollection].label : 'Shop the Drop'}
+              </h2>
+              <p className="max-w-xs text-sm text-text-main/50 uppercase tracking-wider font-medium italic">High-performance recovery apparel designed for post-training excellence.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+              {filteredProducts.map(p => {
             const firstImg = p.variants?.[0]?.images?.[0]
             return (
               <div key={p._id} className="group cursor-pointer" onClick={() => openModal(p)}>
@@ -198,7 +288,9 @@ function App() {
               </div>
             )
           })}
-        </div>
+            </div>
+          </>
+        )}
       </main>
 
       {/* PRODUCT MODAL */}
@@ -272,6 +364,19 @@ function App() {
           </>
         )}
       </AnimatePresence>
+
+      {/* WHATSAPP BUTTON */}
+      <a
+        href="https://wa.me/542915091925?text=Hola!%20quiero%20comprar%20este%20producto"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 bg-[#25d366] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+        aria-label="WhatsApp"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+      </a>
     </div>
   );
 }
