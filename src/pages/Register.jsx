@@ -67,6 +67,7 @@ export default function Register() {
           <p
             className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-text-main"
             role="alert"
+            data-testid="register-error-message"
           >
             {error}
           </p>
@@ -84,6 +85,7 @@ export default function Register() {
             type="text"
             autoComplete="name"
             required
+            data-testid="register-name-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="mt-1.5 w-full rounded-lg border border-accent-muted/60 bg-background-light px-4 py-3 text-sm text-text-main outline-none ring-primary/30 transition-shadow focus:border-primary focus:ring-2"
@@ -102,6 +104,7 @@ export default function Register() {
             type="email"
             autoComplete="email"
             required
+            data-testid="register-email-input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="mt-1.5 w-full rounded-lg border border-accent-muted/60 bg-background-light px-4 py-3 text-sm text-text-main outline-none ring-primary/30 transition-shadow focus:border-primary focus:ring-2"
@@ -121,6 +124,7 @@ export default function Register() {
             autoComplete="new-password"
             required
             minLength={6}
+            data-testid="register-password-input"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="mt-1.5 w-full rounded-lg border border-accent-muted/60 bg-background-light px-4 py-3 text-sm text-text-main outline-none ring-primary/30 transition-shadow focus:border-primary focus:ring-2"
@@ -140,6 +144,7 @@ export default function Register() {
             autoComplete="new-password"
             required
             minLength={6}
+            data-testid="register-confirm-password-input"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             className="mt-1.5 w-full rounded-lg border border-accent-muted/60 bg-background-light px-4 py-3 text-sm text-text-main outline-none ring-primary/30 transition-shadow focus:border-primary focus:ring-2"
@@ -149,6 +154,7 @@ export default function Register() {
         <button
           type="submit"
           disabled={loading}
+          data-testid="register-submit-button"
           className="w-full rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-primary disabled:opacity-60"
         >
           {loading ? 'Creando cuenta…' : 'Registrarme'}
