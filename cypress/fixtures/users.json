@@ -1,0 +1,24 @@
+{
+  "validNewUser": {
+    "name": "Usuario QA Test",
+    "email": "qa.test.{{timestamp}}@bronza-test.com",
+    "password": "TestPass123!",
+    "confirmPassword": "TestPass123!"
+  },
+  "existingUser": {
+    "email": "qa.automation.test@bronza.com",
+    "password": "TestPassword123!"
+  },
+  "invalidPasswordMismatch": {
+    "name": "Usuario Invalido",
+    "email": "invalido@bronza-test.com",
+    "password": "Password123!",
+    "confirmPassword": "OtraPassword456!"
+  },
+  "invalidEmailFormat": {
+    "name": "Usuario Invalido",
+    "email": "email-sin-formato-valido",
+    "password": "Password123!",
+    "confirmPassword": "Password123!"
+  }
+}

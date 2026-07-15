@@ -110,7 +110,7 @@ const Checkout = () => {
           Volver a agregar productos
         </button>
 
-        <ul className="mt-6 space-y-3 text-sm">
+        <ul data-testid="checkout-order-summary" className="mt-6 space-y-3 text-sm">
           {cart.map((item) => (
             <li
               key={item.id}
@@ -134,7 +134,7 @@ const Checkout = () => {
           ))}
         </ul>
 
-        <h3 className="mt-8 text-xl font-black">
+        <h3 data-testid="checkout-total-amount" className="mt-8 text-xl font-black">
           Total: {formatMoney(total)}
         </h3>
 
@@ -201,6 +201,7 @@ const Checkout = () => {
             ) : null}
             <a
               href={payUrl}
+              data-testid="checkout-mercadopago-button"
               className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#009EE3] px-6 py-4 font-bold text-xs uppercase tracking-widest text-white shadow-sm transition-all hover:brightness-110"
             >
               Pagar con Mercado Pago
@@ -225,7 +226,7 @@ const Checkout = () => {
               en el front como respaldo (link fijo).
             </p>
             {payError ? (
-              <p className="mt-2 text-xs text-primary" role="alert">
+              <p className="mt-2 text-xs text-primary" role="alert" data-testid="checkout-error-message">
                 {payError}
               </p>
             ) : null}

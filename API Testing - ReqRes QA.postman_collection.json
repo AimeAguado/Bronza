@@ -1,0 +1,437 @@
+{
+  "info": {
+    "_postman_id": "8389c019-09b4-4d47-848a-89a462b822da",
+    "name": "API Testing - ReqRes QA",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56368613",
+    "_collection_link": "https://go.postman.co/collection/56368613-8389c019-09b4-4d47-848a-89a462b822da?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API Delete user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 204\", () => {\r",
+              "    pm.response.to.have.status(204);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "free_user_3GBiOBUyaxwtZEhX7vS4D2Qkf8i",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API Create user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 201\", () => {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "free_user_3GBiOBUyaxwtZEhX7vS4D2Qkf8i",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Aime\",\r\n  \"job\": \"QA\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API Single user",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "free_user_3GBiOBUyaxwtZEhX7vS4D2Qkf8i",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API User list",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Tiempo de respuesta menor a 1s\", () => {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"La respuesta tiene usuarios\", () => {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data.length).to.be.above(0);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Cada usuario tiene email\", () => {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    jsonData.data.forEach(user => {\r",
+              "        pm.expect(user).to.have.property(\"email\");\r",
+              "    });\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Total coincide con cantidad esperada\", () => {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.total).to.eql(12);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Page es 1\", () => {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.page).to.eql(1);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Usuarios tienen estructura correcta\", () => {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    \r",
+              "    jsonData.data.forEach(user => {\r",
+              "        pm.expect(user).to.have.property(\"id\");\r",
+              "        pm.expect(user).to.have.property(\"email\");\r",
+              "        pm.expect(user).to.have.property(\"first_name\");\r",
+              "        pm.expect(user).to.have.property(\"last_name\");\r",
+              "        pm.expect(user).to.have.property(\"avatar\");\r",
+              "    });\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Emails tienen formato válido\", () => {\r",
+              "    let jsonData = pm.response.json();\r",
+              "    jsonData.data.forEach(user => {\r",
+              "        pm.expect(user.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);\r",
+              "    });\r",
+              "});\r",
+              "\r",
+              "const template = `\r",
+              "<!DOCTYPE html>\r",
+              "<html>\r",
+              "<head>\r",
+              "  <meta charset=\"utf-8\" />\r",
+              "  <style>\r",
+              "    body {\r",
+              "      font-family: Arial, sans-serif;\r",
+              "      background: #f8fafc;\r",
+              "      margin: 0;\r",
+              "      padding: 24px;\r",
+              "      color: #1f2937;\r",
+              "    }\r",
+              "    .header {\r",
+              "      margin-bottom: 20px;\r",
+              "    }\r",
+              "    .title {\r",
+              "      font-size: 24px;\r",
+              "      font-weight: 700;\r",
+              "      margin: 0 0 6px;\r",
+              "    }\r",
+              "    .subtitle {\r",
+              "      color: #6b7280;\r",
+              "      margin: 0;\r",
+              "    }\r",
+              "    .summary {\r",
+              "      display: flex;\r",
+              "      gap: 12px;\r",
+              "      flex-wrap: wrap;\r",
+              "      margin: 20px 0;\r",
+              "    }\r",
+              "    .summary-card {\r",
+              "      background: #ffffff;\r",
+              "      border: 1px solid #e5e7eb;\r",
+              "      border-radius: 12px;\r",
+              "      padding: 12px 16px;\r",
+              "      min-width: 120px;\r",
+              "      box-shadow: 0 1px 2px rgba(0,0,0,0.06);\r",
+              "    }\r",
+              "    .summary-label {\r",
+              "      font-size: 12px;\r",
+              "      color: #6b7280;\r",
+              "      text-transform: uppercase;\r",
+              "      letter-spacing: 0.04em;\r",
+              "      margin-bottom: 6px;\r",
+              "    }\r",
+              "    .summary-value {\r",
+              "      font-size: 20px;\r",
+              "      font-weight: 700;\r",
+              "    }\r",
+              "    .grid {\r",
+              "      display: grid;\r",
+              "      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));\r",
+              "      gap: 16px;\r",
+              "      margin-top: 20px;\r",
+              "    }\r",
+              "    .card {\r",
+              "      background: #ffffff;\r",
+              "      border: 1px solid #e5e7eb;\r",
+              "      border-radius: 14px;\r",
+              "      padding: 16px;\r",
+              "      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);\r",
+              "    }\r",
+              "    .user-top {\r",
+              "      display: flex;\r",
+              "      align-items: center;\r",
+              "      gap: 12px;\r",
+              "      margin-bottom: 14px;\r",
+              "    }\r",
+              "    .avatar {\r",
+              "      width: 64px;\r",
+              "      height: 64px;\r",
+              "      border-radius: 999px;\r",
+              "      object-fit: cover;\r",
+              "      border: 2px solid #dbeafe;\r",
+              "      background: #e5e7eb;\r",
+              "    }\r",
+              "    .name {\r",
+              "      font-size: 18px;\r",
+              "      font-weight: 700;\r",
+              "      margin: 0;\r",
+              "    }\r",
+              "    .user-id {\r",
+              "      margin: 4px 0 0;\r",
+              "      color: #6b7280;\r",
+              "      font-size: 13px;\r",
+              "    }\r",
+              "    .details {\r",
+              "      display: grid;\r",
+              "      gap: 8px;\r",
+              "    }\r",
+              "    .row {\r",
+              "      display: grid;\r",
+              "      grid-template-columns: 92px 1fr;\r",
+              "      gap: 8px;\r",
+              "      align-items: start;\r",
+              "    }\r",
+              "    .label {\r",
+              "      color: #6b7280;\r",
+              "      font-size: 13px;\r",
+              "      font-weight: 600;\r",
+              "    }\r",
+              "    .value {\r",
+              "      font-size: 14px;\r",
+              "      word-break: break-word;\r",
+              "    }\r",
+              "    .email {\r",
+              "      color: #2563eb;\r",
+              "      text-decoration: none;\r",
+              "    }\r",
+              "    .empty {\r",
+              "      background: #ffffff;\r",
+              "      border: 1px dashed #cbd5e1;\r",
+              "      border-radius: 12px;\r",
+              "      padding: 24px;\r",
+              "      text-align: center;\r",
+              "      color: #6b7280;\r",
+              "    }\r",
+              "  </style>\r",
+              "</head>\r",
+              "<body>\r",
+              "  <div class=\"header\">\r",
+              "    <h1 class=\"title\">ReqRes Users</h1>\r",
+              "    <p class=\"subtitle\">Friendly view of users returned in response.data</p>\r",
+              "  </div>\r",
+              "\r",
+              "  <div class=\"summary\">\r",
+              "    <div class=\"summary-card\">\r",
+              "      <div class=\"summary-label\">Page</div>\r",
+              "      <div class=\"summary-value\">{{page}}</div>\r",
+              "    </div>\r",
+              "    <div class=\"summary-card\">\r",
+              "      <div class=\"summary-label\">Per page</div>\r",
+              "      <div class=\"summary-value\">{{perPage}}</div>\r",
+              "    </div>\r",
+              "    <div class=\"summary-card\">\r",
+              "      <div class=\"summary-label\">Total users</div>\r",
+              "      <div class=\"summary-value\">{{total}}</div>\r",
+              "    </div>\r",
+              "    <div class=\"summary-card\">\r",
+              "      <div class=\"summary-label\">Shown</div>\r",
+              "      <div class=\"summary-value\">{{shown}}</div>\r",
+              "    </div>\r",
+              "  </div>\r",
+              "\r",
+              "  {{#if users.length}}\r",
+              "  <div class=\"grid\">\r",
+              "    {{#each users}}\r",
+              "    <div class=\"card\">\r",
+              "      <div class=\"user-top\">\r",
+              "        <img class=\"avatar\" src=\"{{avatar}}\" alt=\"Avatar of {{fullName}}\" />\r",
+              "        <div>\r",
+              "          <h2 class=\"name\">{{fullName}}</h2>\r",
+              "          <p class=\"user-id\">User ID: {{id}}</p>\r",
+              "        </div>\r",
+              "      </div>\r",
+              "      <div class=\"details\">\r",
+              "        <div class=\"row\">\r",
+              "          <div class=\"label\">First name</div>\r",
+              "          <div class=\"value\">{{first_name}}</div>\r",
+              "        </div>\r",
+              "        <div class=\"row\">\r",
+              "          <div class=\"label\">Last name</div>\r",
+              "          <div class=\"value\">{{last_name}}</div>\r",
+              "        </div>\r",
+              "        <div class=\"row\">\r",
+              "          <div class=\"label\">Email</div>\r",
+              "          <div class=\"value\"><a class=\"email\" href=\"mailto:{{email}}\">{{email}}</a></div>\r",
+              "        </div>\r",
+              "        <div class=\"row\">\r",
+              "          <div class=\"label\">Avatar</div>\r",
+              "          <div class=\"value\">{{avatar}}</div>\r",
+              "        </div>\r",
+              "      </div>\r",
+              "    </div>\r",
+              "    {{/each}}\r",
+              "  </div>\r",
+              "  {{else}}\r",
+              "  <div class=\"empty\">No users found in response.data.</div>\r",
+              "  {{/if}}\r",
+              "</body>\r",
+              "</html>`;\r",
+              "\r",
+              "function createPayload() {\r",
+              "    const json = pm.response.json();\r",
+              "    const users = Array.isArray(json.data) ? json.data.map((user) => ({\r",
+              "        id: user && user.id != null ? String(user.id) : 'N/A',\r",
+              "        first_name: user && user.first_name ? String(user.first_name) : 'N/A',\r",
+              "        last_name: user && user.last_name ? String(user.last_name) : 'N/A',\r",
+              "        fullName: [user && user.first_name ? String(user.first_name) : '', user && user.last_name ? String(user.last_name) : ''].filter(Boolean).join(' ') || 'N/A',\r",
+              "        email: user && user.email ? String(user.email) : 'N/A',\r",
+              "        avatar: user && user.avatar ? String(user.avatar) : ''\r",
+              "    })) : [];\r",
+              "\r",
+              "    return {\r",
+              "        page: json.page != null ? String(json.page) : 'N/A',\r",
+              "        perPage: json.per_page != null ? String(json.per_page) : 'N/A',\r",
+              "        total: json.total != null ? String(json.total) : String(users.length),\r",
+              "        shown: String(users.length),\r",
+              "        users\r",
+              "    };\r",
+              "}\r",
+              "\r",
+              "pm.visualizer.set(template, createPayload());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "free_user_3GBiOBUyaxwtZEhX7vS4D2Qkf8i",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users?x-api-key=free_user_3GBiOBUyaxwtZEhX7vS4D2Qkf8i",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "x-api-key",
+              "value": "free_user_3GBiOBUyaxwtZEhX7vS4D2Qkf8i"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

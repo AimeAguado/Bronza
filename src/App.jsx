@@ -173,6 +173,7 @@ function App() {
               className="flex items-center gap-2 text-text-main hover:text-primary transition-colors"
               title={user ? `Cuenta: ${user.name}` : 'Iniciar sesión'}
               aria-label={user ? `Cuenta de ${user.name}` : 'Iniciar sesión'}
+              {...(!user ? { 'data-testid': 'nav-login-link' } : {})}
             >
               {user ? (
                 <span className="hidden sm:inline max-w-[140px] truncate text-left text-[10px] font-bold uppercase tracking-wider leading-tight">
@@ -181,7 +182,7 @@ function App() {
               ) : null}
               <User size={20} className="shrink-0" />
             </button>
-            <div className="relative cursor-pointer" onClick={() => setIsCartOpen(true)}>
+            <div className="relative cursor-pointer" data-testid="nav-cart-icon" onClick={() => navigate('/carrito')}>
               <ShoppingBag size={20} />
               {cart.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
@@ -268,8 +269,10 @@ function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
               {filteredProducts.map(p => {
             const firstImg = p.variants?.[0]?.images?.[0]
+            const firstColor = p.variants?.[0]?.color
+            const firstSize = p.sizes?.[0]
             return (
-              <div key={p._id} className="group cursor-pointer" onClick={() => openModal(p)}>
+              <div key={p._id} className="group cursor-pointer" onClick={() => openModal(p)} data-testid="product-card">
                 <div className="aspect-[3/4] overflow-hidden bg-accent-muted/20 rounded-xl relative mb-6">
                   <img
                     src={firstImg}
@@ -285,6 +288,27 @@ function App() {
                 <h3 className="font-bold text-xl uppercase mt-1 tracking-tight">{p.name}</h3>
                 <p className="text-text-main/50 text-sm uppercase tracking-tighter font-medium">{p.category}</p>
                 <p className="mt-2 font-bold">${p.price.toLocaleString('es-AR')}</p>
+                <button
+                  type="button"
+                  data-testid="add-to-cart-button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (firstColor && firstSize) {
+                      addToCart({
+                        id: `${p._id}-${firstColor}-${firstSize}`,
+                        productId: p._id,
+                        name: p.name,
+                        price: p.price,
+                        image: firstImg ?? '',
+                        color: firstColor,
+                        size: firstSize,
+                      })
+                    }
+                  }}
+                  className="mt-3 w-full bg-primary text-white py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:brightness-110 transition-all"
+                >
+                  Agregar al carrito
+                </button>
               </div>
             )
           })}
@@ -367,9 +391,10 @@ function App() {
 
       {/* WHATSAPP BUTTON */}
       <a
-        href="https://wa.me/542915091925?text=Hola!%20quiero%20comprar%20este%20producto"
+        href="https://wa.me/5491100000000?text=Hola!%20Quiero%20hacer%20una%20consulta"
         target="_blank"
         rel="noopener noreferrer"
+        data-testid="whatsapp-float-button"
         className="fixed bottom-6 right-6 z-50 bg-[#25d366] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
         aria-label="WhatsApp"
       >
