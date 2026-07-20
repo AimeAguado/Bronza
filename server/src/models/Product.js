@@ -8,6 +8,7 @@ const variantSchema = new Schema({
 
 const productSchema = new Schema({
   name: { type: String, required: true, trim: true },
+  description: { type: String, trim: true, default: '' },
   category: { type: String, trim: true },
   price: { type: Number, required: true },
   sizes: [{ type: String, trim: true }],

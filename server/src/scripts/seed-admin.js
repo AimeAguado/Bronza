@@ -49,17 +49,19 @@ async function seed() {
 
   // Admin user
   const existing = await User.findOne({ email: 'admin@bronzaclub.com' })
+  const passwordHash = await bcrypt.hash('123456', 10)
   if (existing) {
-    console.log('Admin ya existe, saltando...')
+    existing.passwordHash = passwordHash
+    await existing.save()
+    console.log('✓ Admin actualizado: admin@bronzaclub.com / 123456')
   } else {
-    const passwordHash = await bcrypt.hash('bronzadmin2026', 10)
     await User.create({
       name: 'Bronza',
       email: 'admin@bronzaclub.com',
       passwordHash,
       role: 'admin',
     })
-    console.log('✓ Admin creado: admin@bronzaclub.com / bronzadmin2026')
+    console.log('✓ Admin creado: admin@bronzaclub.com / 123456')
   }
 
   // Products

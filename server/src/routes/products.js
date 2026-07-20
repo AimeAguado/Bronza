@@ -42,6 +42,16 @@ router.get('/', async (_req, res) => {
   }
 })
 
+router.get('/admin', requireAdmin, async (_req, res) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 })
+    return res.json({ products })
+  } catch (e) {
+    console.error(e)
+    return res.status(500).json({ error: 'Error al obtener productos.' })
+  }
+})
+
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -57,12 +67,13 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', requireAdmin, async (req, res) => {
   try {
-    const { name, category, price, sizes, variants } = req.body || {}
+    const { name, description, category, price, sizes, variants } = req.body || {}
     if (!name || price == null) {
       return res.status(400).json({ error: 'Nombre y precio son requeridos.' })
     }
     const product = await Product.create({
       name,
+      description: description ?? '',
       category,
       price,
       sizes: sizes ?? [],
@@ -77,9 +88,10 @@ router.post('/', requireAdmin, async (req, res) => {
 
 router.patch('/:id', requireAdmin, async (req, res) => {
   try {
-    const { name, category, price, sizes, variants, active } = req.body || {}
+    const { name, description, category, price, sizes, variants, active } = req.body || {}
     const update = {}
     if (name !== undefined) update.name = name
+    if (description !== undefined) update.description = description
     if (category !== undefined) update.category = category
     if (price !== undefined) update.price = price
     if (sizes !== undefined) update.sizes = sizes
@@ -88,6 +100,19 @@ router.patch('/:id', requireAdmin, async (req, res) => {
 
     const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true })
     if (!product) return res.status(404).json({ error: 'Producto no encontrado.' })
+    return res.json({ product })
+  } catch (e) {
+    console.error(e)
+    return res.status(500).json({ error: 'Error al actualizar producto.' })
+  }
+})
+
+router.patch('/:id/toggle-active', requireAdmin, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+    if (!product) return res.status(404).json({ error: 'Producto no encontrado.' })
+    product.active = !product.active
+    await product.save()
     return res.json({ product })
   } catch (e) {
     console.error(e)
