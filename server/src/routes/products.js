@@ -3,6 +3,7 @@ import multer from 'multer'
 import { v2 as cloudinary } from 'cloudinary'
 import { Product } from '../models/Product.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
+import { requireAuth } from '../middleware/requireAuth.js'
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -32,19 +33,21 @@ router.post('/upload', requireAdmin, upload.single('image'), async (req, res) =>
   }
 })
 
-router.get('/', async (_req, res) => {
-  try {
-    const products = await Product.find({ active: true }).sort({ createdAt: -1 })
-    return res.json({ products })
-  } catch (e) {
-    console.error(e)
-    return res.status(500).json({ error: 'Error al obtener productos.' })
+router.get('/', (req, res, next) => {
+  if (req.query.admin === 'true') {
+    return requireAuth(req, res, () => {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Acceso denegado.' })
+      }
+      next()
+    })
   }
-})
-
-router.get('/admin', requireAdmin, async (_req, res) => {
+  next()
+}, async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 })
+    const isAdmin = req.query.admin === 'true' && req.user?.role === 'admin'
+    const filter = isAdmin ? {} : { active: true }
+    const products = await Product.find(filter).sort({ createdAt: -1 })
     return res.json({ products })
   } catch (e) {
     console.error(e)

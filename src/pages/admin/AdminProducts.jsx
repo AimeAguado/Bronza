@@ -305,7 +305,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true)
 
   async function fetchProducts() {
-    const res = await fetch(apiUrl('/api/products/admin'), { headers: { Authorization: `Bearer ${token}` } })
+    const res = await fetch(apiUrl('/api/products?admin=true'), { headers: { Authorization: `Bearer ${token}` } })
     const data = await res.json()
     setProducts(data.products ?? [])
     setLoading(false)
