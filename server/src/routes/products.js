@@ -7,7 +7,7 @@ import { requireAuth } from '../middleware/requireAuth.js'
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp']
     cb(null, allowed.includes(file.mimetype))
@@ -16,12 +16,22 @@ const upload = multer({
 
 const router = Router()
 
-router.post('/upload', requireAdmin, upload.single('image'), async (req, res) => {
+router.post('/upload', requireAdmin, (req, res, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'La imagen supera el límite de 10MB.' })
+      }
+      return res.status(400).json({ error: err.message })
+    }
+    next()
+  })
+}, async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Archivo inválido. Solo JPG, PNG o WEBP.' })
   try {
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: 'bronza-products' },
+        { folder: 'bronza-products', resource_type: 'image' },
         (err, result) => (err ? reject(err) : resolve(result)),
       )
       stream.end(req.file.buffer)
