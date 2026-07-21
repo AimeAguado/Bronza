@@ -117,11 +117,17 @@ router.patch('/:id', requireAdmin, async (req, res) => {
     if (variants !== undefined) update.variants = variants
     if (active !== undefined) update.active = active
 
+    console.log('[PATCH /:id] id:', req.params.id)
+    console.log('[PATCH /:id] update keys:', Object.keys(update))
+    console.log('[PATCH /:id] variants prev:', JSON.stringify((await Product.findById(req.params.id))?.variants?.map(v => v.images)).slice(0, 300))
+
     const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true })
     if (!product) return res.status(404).json({ error: 'Producto no encontrado.' })
+
+    console.log('[PATCH /:id] variants after:', JSON.stringify(product.variants?.map(v => v.images)).slice(0, 300))
     return res.json({ product })
   } catch (e) {
-    console.error(e)
+    console.error('[PATCH /:id] error:', e)
     return res.status(500).json({ error: 'Error al actualizar producto.' })
   }
 })
