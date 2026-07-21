@@ -305,10 +305,15 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true)
 
   async function fetchProducts() {
-    const res = await fetch(apiUrl('/api/products?admin=true'), { headers: { Authorization: `Bearer ${token}` } })
-    const data = await res.json()
-    setProducts(data.products ?? [])
-    setLoading(false)
+    try {
+      const res = await fetch(apiUrl('/api/products?admin=true'), { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      setProducts(data.products ?? [])
+    } catch (e) {
+      console.error('Error al obtener productos:', e)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -337,6 +342,7 @@ export default function AdminProducts() {
       headers: { Authorization: `Bearer ${token}` },
     })
     fetchProducts()
+    window.dispatchEvent(new Event('products-updated'))
   }
 
   return (
@@ -411,7 +417,7 @@ export default function AdminProducts() {
         open={modalOpen}
         product={editingProduct}
         onClose={closeModal}
-        onSave={() => { closeModal(); fetchProducts() }}
+        onSave={() => { closeModal(); fetchProducts(); window.dispatchEvent(new Event('products-updated')) }}
         token={token}
       />
     </div>

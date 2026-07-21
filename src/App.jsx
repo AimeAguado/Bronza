@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Plus, Minus, Trash2, User, Database } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -73,12 +73,18 @@ function App() {
     setActiveCollection(slug);
   }
 
-  useEffect(() => {
+  const fetchProducts = useCallback(() => {
     fetch(apiUrl('/api/products'))
       .then((r) => r.json())
       .then((data) => setProducts(data.products ?? []))
       .catch(() => {})
-  }, []);
+  }, [])
+
+  useEffect(() => {
+    fetchProducts()
+    window.addEventListener('products-updated', fetchProducts)
+    return () => window.removeEventListener('products-updated', fetchProducts)
+  }, [fetchProducts]);
 
   useEffect(() => {
     if (!ready) return;
