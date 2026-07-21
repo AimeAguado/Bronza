@@ -5,6 +5,12 @@ import { Product } from '../models/Product.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config()
+} else {
+  console.warn('[products] CLOUDINARY_URL no configurada — uploads no funcionarán')
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -38,8 +44,8 @@ router.post('/upload', requireAdmin, (req, res, next) => {
     })
     return res.json({ url: result.secure_url })
   } catch (e) {
-    console.error('Cloudinary upload error:', e)
-    return res.status(500).json({ error: 'Error al subir imagen.' })
+    console.error('[upload] Cloudinary error:', e.message ?? e)
+    return res.status(500).json({ error: `Error al subir imagen: ${e.message ?? 'desconocido'}` })
   }
 })
 
