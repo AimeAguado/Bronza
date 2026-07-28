@@ -23,9 +23,11 @@ export function createApp() {
     res.json({ ok: true })
   })
 
-  app.get('/api/products/:id', async (req, res) => {
+  app.get('/api/products/*', async (req, res) => {
     try {
-      const product = await Product.findById(req.params.id)
+      const id = req.path.replace('/api/products/', '')
+      if (!id) return res.status(404).json({ error: 'Producto no encontrado.' })
+      const product = await Product.findById(id)
       if (!product || !product.active) {
         return res.status(404).json({ error: 'Producto no encontrado.' })
       }
