@@ -7,7 +7,6 @@ import authRoutes from './routes/auth.js'
 import paymentsRoutes from './routes/payments.js'
 import productsRoutes from './routes/products.js'
 import ordersRoutes from './routes/orders.js'
-import { Product } from './models/Product.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -21,24 +20,6 @@ export function createApp() {
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true })
-  })
-
-  app.get('/api/products/*', async (req, res) => {
-    try {
-      const id = req.path.replace('/api/products/', '')
-      if (!id) return res.status(404).json({ error: 'Producto no encontrado.' })
-      const product = await Product.findById(id)
-      if (!product || !product.active) {
-        return res.status(404).json({ error: 'Producto no encontrado.' })
-      }
-      return res.json({ product })
-    } catch (e) {
-      if (e.name === 'CastError') {
-        return res.status(404).json({ error: 'Producto no encontrado.' })
-      }
-      console.error(e)
-      return res.status(500).json({ error: 'Error al obtener producto.' })
-    }
   })
 
   app.use('/api/auth', authRoutes)

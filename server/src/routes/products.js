@@ -71,6 +71,22 @@ router.get('/', (req, res, next) => {
   }
 })
 
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+    if (!product || !product.active) {
+      return res.status(404).json({ error: 'Producto no encontrado.' })
+    }
+    return res.json({ product })
+  } catch (e) {
+    if (e.name === 'CastError') {
+      return res.status(404).json({ error: 'Producto no encontrado.' })
+    }
+    console.error(e)
+    return res.status(500).json({ error: 'Error al obtener producto.' })
+  }
+})
+
 router.post('/', requireAdmin, async (req, res) => {
   try {
     const { name, description, category, price, sizes, variants } = req.body || {}
