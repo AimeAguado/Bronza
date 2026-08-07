@@ -37,3 +37,8 @@ cypress/screenshots
 cypress/videos
 cypress/results
 
+# Playwright artifacts
+test-results
+playwright-report
+blob-report
+

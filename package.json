@@ -18,6 +18,9 @@
     "cy:run:chrome": "cypress run --browser chrome",
     "test:smoke": "cypress run --env grepTags=@smoke",
     "test:regression": "cypress run --env grepTags=@regression",
+    "pw:open": "playwright test --ui",
+    "pw:run": "playwright test",
+    "pw:report": "playwright show-report",
     "report:merge": "mochawesome-merge cypress/results/*.json > cypress/results/output.json",
     "report:generate": "marge cypress/results/output.json -f report -o cypress/reports --inline"
   },
@@ -33,6 +36,7 @@
   "devDependencies": {
     "@cypress/grep": "^6.0.2",
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.62.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

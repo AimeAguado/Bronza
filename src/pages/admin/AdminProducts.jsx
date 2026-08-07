@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth.js'
 import { apiUrl } from '../../lib/api.js'
@@ -31,7 +31,11 @@ function ProductModal({ open, product, onClose, onSave, token }) {
 
   const isEditing = !!product
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open)
+  const [prevProduct, setPrevProduct] = useState(product)
+  if (open !== prevOpen || product !== prevProduct) {
+    setPrevOpen(open)
+    setPrevProduct(product)
     if (open) {
       if (product) {
         setForm({
@@ -52,7 +56,7 @@ function ProductModal({ open, product, onClose, onSave, token }) {
       }
       setError('')
     }
-  }, [open, product])
+  }
 
   if (!open) return null
 
@@ -304,7 +308,7 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  async function fetchProducts() {
+  const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch(apiUrl('/api/products?admin=true'), { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
@@ -314,11 +318,11 @@ export default function AdminProducts() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
 
   useEffect(() => {
     fetchProducts()
-  }, [token])
+  }, [token, fetchProducts])
 
   function openCreateModal() {
     setEditingProduct(null)

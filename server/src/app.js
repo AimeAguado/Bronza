@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { dirname, join } from 'node:path'
+import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { connectDB } from './lib/db.js'
 import authRoutes from './routes/auth.js'

@@ -85,6 +85,13 @@ function App() {
     window.addEventListener('products-updated', fetchProducts)
     return () => window.removeEventListener('products-updated', fetchProducts)
   }, [fetchProducts]);
+  const paymentParam = searchParams.get('payment');
+  const [processedPayment, setProcessedPayment] = useState(null);
+  if (paymentParam && paymentParam !== processedPayment) {
+    setProcessedPayment(paymentParam);
+    setPaymentStatus(paymentParam);
+    if (paymentParam === 'success') setCart([]);
+  }
 
   useEffect(() => {
     if (!ready) return;
@@ -96,10 +103,7 @@ function App() {
     const collectionStatus =
       searchParams.get('collection_status') || searchParams.get('status');
 
-    setPaymentStatus(status);
     setSearchParams({}, { replace: true });
-
-    if (status === 'success') setCart([]);
 
     if (!externalReference || !token) return;
 
