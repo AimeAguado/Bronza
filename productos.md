@@ -23,7 +23,7 @@ Talle: S
 Color: Negro
 
 Producto Imagen 5:(Sin Stock)
-Titulo: Denim Blu Tiro Bajo
+Titulo: Denim Tiro Bajo
 Precio: $46.000
 Talle: 38
 Color: Azul

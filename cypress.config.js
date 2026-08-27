@@ -4,6 +4,7 @@ const require = createRequire(import.meta.url);
 const { plugin: grep } = require("@cypress/grep/plugin");
 
 export default defineConfig({
+  projectId: 'euuuoe',
   e2e: {
     baseUrl: "http://localhost:5173",
     viewportWidth: 1280,

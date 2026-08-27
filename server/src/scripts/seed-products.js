@@ -65,7 +65,7 @@ const PRODUCTS = [
     ],
   },
   {
-    name: 'Denim Blu Tiro Bajo',
+    name: 'Denim Tiro Bajo',
     category: 'Pantalones',
     price: 46000,
     sizes: ['36', '38', '40', '42'],
