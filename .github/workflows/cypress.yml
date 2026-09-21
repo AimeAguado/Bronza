@@ -1,0 +1,129 @@
+# ============================================
+# Workflow: Cypress Tests
+# Repositorio: Bronza (AimeAguado/Bronza)
+# Descripción: ejecuta la suite E2E de Cypress
+# (cypress/e2e) sobre el e-commerce Bronza Club
+# y genera los reportes Mochawesome del proyecto.
+# ============================================
+
+name: Cypress Tests
+
+on:
+  # 1) Se ejecuta automáticamente en cada push a main
+  push:
+    branches: [main]
+  # 2) Se ejecuta automáticamente en cada pull request
+  pull_request:
+  # 3) Se puede ejecutar a mano desde la pestaña Actions
+  workflow_dispatch:
+
+jobs:
+  cypress:
+    name: Cypress E2E (Bronza)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Base de datos MongoDB en un contenedor (el server de Bronza la requiere)
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+    # Variables de entorno para el server de Bronza
+    env:
+      JWT_SECRET: ci-secret-para-tests-bronza
+      MONGODB_URI: mongodb://127.0.0.1:27017/bronza
+
+    steps:
+      # 1. Descargar el código del repositorio
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      # 2. Configurar Node.js
+      - name: Configurar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 3. Instalar dependencias exactas (incluye el binario de Cypress)
+      - name: Instalar dependencias
+        run: npm ci
+
+      # 4. Sembrar la base: admin + 15 productos (script real del server)
+      - name: Sembrar productos en MongoDB
+        run: node server/src/scripts/seed-products.js
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/bronza
+
+      # 5. Levantar la app (Vite + API) en segundo plano y esperar a que responda
+      #    (Cypress no arranca el server solo: el app ya debe estar corriendo en :5173)
+      - name: Levantar app (Vite + API) en background
+        run: |
+          npm run dev:all > bronza-ci.log 2>&1 &
+          for i in $(seq 1 60); do
+            VITE_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173)
+            API_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/api/products)
+            if [ "$VITE_OK" != "000" ] && [ "$API_OK" != "000" ]; then
+              echo "Servidores listos"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Los servidores no arrancaron a tiempo:"
+          cat bronza-ci.log
+          exit 1
+
+      # 6. Crear por API el usuario "existing user" que usan los fixtures
+      #    (si ya existe, el endpoint devuelve 409 y se ignora)
+      - name: Sembrar usuario de fixtures por API
+        run: |
+          curl -sf -X POST http://localhost:4000/api/auth/register \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"QA Automation","email":"qa.automation.test@bronza.com","password":"TestPassword123!"}' \
+            && echo "✓ usuario creado" \
+            || echo "usuario ya existía (409) — continuando"
+
+      # 7. Ejecutar los tests E2E reales de Cypress en modo headless
+      #    Los comandos (cy:run) provienen del package.json del proyecto
+      - name: Ejecutar tests de Cypress
+        run: npm run cy:run
+
+      # 8-9. Generar el reporte Mochawesome que el proyecto ya utiliza.
+      #      Se corrió aunque fallen tests para tener evidencia (reportes siempre).
+      - name: Combinar reportes Mochawesome (JSON)
+        if: always()
+        run: npm run report:merge
+
+      - name: Generar reporte HTML (marge)
+        if: always()
+        run: npm run report:generate
+
+      # 10-12. Conservar evidencias SIEMPRE (incluso si los tests fallaron)
+      #        Videos/screenshots los genera Cypress en sus carpetas reales.
+      - name: Subir videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: cypress/videos/**
+          if-no-files-found: ignore
+
+      - name: Subir screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots/**
+          if-no-files-found: ignore
+
+      - name: Subir reporte Mochawesome (HTML + JSON)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-report
+          path: |
+            cypress/reports/**
+            cypress/results/**
+          if-no-files-found: ignore

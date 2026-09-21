@@ -1,0 +1,132 @@
+# ============================================
+# Workflow: Playwright Tests
+# Repositorio: Bronza (AimeAguado/Bronza)
+# Descripción: ejecuta la suite E2E de Playwright
+# (tests/e2e) sobre el e-commerce Bronza Club.
+# ============================================
+
+name: Playwright Tests
+
+on:
+  # 1) Se ejecuta automáticamente en cada push a main
+  push:
+    branches: [main]
+  # 2) Se ejecuta automáticamente en cada pull request
+  pull_request:
+  # 3) Se puede ejecutar a mano desde la pestaña Actions
+  workflow_dispatch:
+
+jobs:
+  playwright:
+    name: Playwright E2E (Bronza)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Base de datos MongoDB en un contenedor (el server de Bronza la requiere)
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+    # Variables de entorno para el server de Bronza
+    env:
+      JWT_SECRET: ci-secret-para-tests-bronza
+      MONGODB_URI: mongodb://127.0.0.1:27017/bronza
+
+    steps:
+      # 1. Descargar el código del repositorio
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      # 2. Configurar Node.js (misma línea usada en dev; Vite/Cypress/Playwright la soportan)
+      - name: Configurar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 3. Instalar dependencias exactas del package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+
+      # 4. Descargar el navegador Chromium que usa Playwright
+      #    --with-deps instala además las librerías de sistema que necesita el runner
+      - name: Instalar navegadores de Playwright
+        run: npx playwright install --with-deps chromium
+
+      # 5. Sembrar la base: admin + 15 productos (script real del server)
+      #    Sin productos, los tests de carrito no tienen datos que probar
+      - name: Sembrar productos en MongoDB
+        run: node server/src/scripts/seed-products.js
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/bronza
+
+      # 6. Levantar la app (Vite + API) en segundo plano y esperar a que responda
+      - name: Levantar app (Vite + API) en background
+        run: |
+          npm run dev:all > bronza-ci.log 2>&1 &
+          for i in $(seq 1 60); do
+            VITE_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173)
+            API_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/api/products)
+            if [ "$VITE_OK" != "000" ] && [ "$API_OK" != "000" ]; then
+              echo "Servidores listos"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Los servidores no arrancaron a tiempo:"
+          cat bronza-ci.log
+          exit 1
+
+      # 7. Crear por API el usuario "existing user" que usan los fixtures
+      #    (si ya existe, el endpoint devuelve 409 y se ignora)
+      - name: Sembrar usuario de fixtures por API
+        run: |
+          curl -sf -X POST http://localhost:4000/api/auth/register \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"QA Automation","email":"qa.automation.test@bronza.com","password":"TestPassword123!"}' \
+            && echo "✓ usuario creado" \
+            || echo "usuario ya existía (409) — continuando"
+
+      # 8. Ejecutar los tests E2E reales de Playwright
+      #    Si un test falla, el paso falla y el job queda como FAILED
+      #    (forbidOnly y retries=2 los define el propio playwright.config.js con CI=true)
+      - name: Ejecutar tests de Playwright
+        run: npm run pw:run
+        env:
+          CI: true
+
+      # 9-12. Conservar evidencias SIEMPRE (incluso si los tests fallaron)
+      #       Solo se suben los directorios que Playwright realmente genera.
+      - name: Subir reporte HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/**
+          if-no-files-found: ignore
+
+      - name: Subir screenshots (solo si hubo fallos)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: test-results/**/*.png
+          if-no-files-found: ignore
+
+      - name: Subir videos (solo si hubo fallos)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-videos
+          path: test-results/**/*.webm
+          if-no-files-found: ignore
+
+      - name: Subir traces (solo si hubo retries)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/**/*.zip
+          if-no-files-found: ignore
