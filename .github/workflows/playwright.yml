@@ -67,8 +67,8 @@ jobs:
         run: |
           npm run dev:all > bronza-ci.log 2>&1 &
           for i in $(seq 1 60); do
-            VITE_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173)
-            API_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/api/products)
+            VITE_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173 || true)
+            API_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/api/products || true)
             if [ "$VITE_OK" != "000" ] && [ "$API_OK" != "000" ]; then
               echo "Servidores listos"
               exit 0

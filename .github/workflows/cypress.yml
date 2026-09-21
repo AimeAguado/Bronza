@@ -63,8 +63,8 @@ jobs:
         run: |
           npm run dev:all > bronza-ci.log 2>&1 &
           for i in $(seq 1 60); do
-            VITE_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173)
-            API_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/api/products)
+            VITE_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173 || true)
+            API_OK=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/api/products || true)
             if [ "$VITE_OK" != "000" ] && [ "$API_OK" != "000" ]; then
               echo "Servidores listos"
               exit 0
@@ -94,11 +94,15 @@ jobs:
       #      Se corrió aunque fallen tests para tener evidencia (reportes siempre).
       - name: Combinar reportes Mochawesome (JSON)
         if: always()
-        run: npm run report:merge
+        run: |
+          mkdir -p cypress/results cypress/reports
+          npm run report:merge || echo "No hay reportes JSON para combinar (tests no corrieron)"
 
       - name: Generar reporte HTML (marge)
         if: always()
-        run: npm run report:generate
+        run: |
+          mkdir -p cypress/reports
+          npm run report:generate || echo "No se pudo generar reporte HTML"
 
       # 10-12. Conservar evidencias SIEMPRE (incluso si los tests fallaron)
       #        Videos/screenshots los genera Cypress en sus carpetas reales.
