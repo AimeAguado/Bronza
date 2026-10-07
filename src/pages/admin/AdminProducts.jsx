@@ -350,6 +350,31 @@ export default function AdminProducts() {
     window.dispatchEvent(new Event('products-updated'))
   }
 
+  async function handleDelete(id) {
+    const product = products.find(p => p._id === id)
+    const confirmed = window.confirm(
+      `¿Eliminar "${product?.name ?? 'este producto'}"? Se borra definitivamente (imágenes incluidas) y no se puede deshacer.`
+    )
+    if (!confirmed) return
+
+    try {
+      const res = await fetch(apiUrl(`/api/products/${id}`), {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        window.alert(data.error ?? 'Error al eliminar el producto.')
+        return
+      }
+      fetchProducts()
+      window.dispatchEvent(new Event('products-updated'))
+    } catch (e) {
+      console.error('Error al eliminar producto:', e)
+      window.alert('Error de conexión al eliminar el producto.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background-light pt-24 px-6 pb-12 text-text-main flex flex-col">
       <div className="max-w-5xl mx-auto">
@@ -405,6 +430,10 @@ export default function AdminProducts() {
                           <button onClick={() => handleToggleActive(p._id)}
                             className={`flex items-center gap-1 text-xs font-bold uppercase hover:underline ${p.active ? 'text-accent-muted hover:text-primary' : 'text-primary'}`}>
                             {p.active ? <><EyeOff size={12} /> Desactivar</> : <><Eye size={12} /> Activar</>}
+                          </button>
+                          <button onClick={() => handleDelete(p._id)}
+                            className="flex items-center gap-1 text-xs font-bold uppercase text-accent-muted hover:text-primary hover:underline">
+                            <Trash2 size={12} /> Eliminar
                           </button>
                         </div>
                       </td>

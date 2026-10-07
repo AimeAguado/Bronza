@@ -146,12 +146,37 @@ router.patch('/:id/toggle-active', requireAdmin, async (req, res) => {
   }
 })
 
+function imageUrlToPublicId(url) {
+  try {
+    const { pathname } = new URL(url)
+    const match = pathname.match(/\/upload\/v\d+\/(.+?)\.[a-z0-9]+$/i)
+    return match ? match[1] : null
+  } catch {
+    return null
+  }
+}
+
+function destroyCloudinaryImage(url) {
+  if (!process.env.CLOUDINARY_URL) return
+  const publicId = imageUrlToPublicId(url)
+  if (!publicId) return
+  cloudinary.uploader.destroy(publicId, (err) => {
+    if (err) console.warn('[delete] no se pudo borrar imagen de Cloudinary:', publicId, err.message ?? err)
+  })
+}
+
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, { active: false }, { new: true })
+    const product = await Product.findByIdAndDelete(req.params.id)
     if (!product) return res.status(404).json({ error: 'Producto no encontrado.' })
-    return res.json({ ok: true })
+    for (const variant of product.variants ?? []) {
+      for (const url of variant.images ?? []) destroyCloudinaryImage(url)
+    }
+    return res.json({ ok: true, product })
   } catch (e) {
+    if (e.name === 'CastError') {
+      return res.status(404).json({ error: 'Producto no encontrado.' })
+    }
     console.error(e)
     return res.status(500).json({ error: 'Error al eliminar producto.' })
   }
