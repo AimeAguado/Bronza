@@ -22,10 +22,6 @@ Temporada 2027.
 
 Bronzate. Brilla. Viví. ☀️`;
 
-const HERO_IMAGES = [
-  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380397/bronza-products/abzeo3ezvicgs1yizaoq.jpg',
-];
-
 const HERO_VIDEO =
   'https://videos.pexels.com/video-files/36346838/15416216_1280_720_30fps.mp4';
 
@@ -43,6 +39,7 @@ function App() {
   const [activeCollection, setActiveCollection] = useState(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const heroVideoRef = useRef(null);
+  const [heroReady, setHeroReady] = useState(false);
 
   const filteredProducts =
     activeCollection && COLLECTIONS[activeCollection]
@@ -259,12 +256,13 @@ function App() {
       <section className="relative min-h-svh flex items-center justify-center bg-primary overflow-hidden">
         <video
           ref={heroVideoRef}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${heroReady ? 'opacity-100' : 'opacity-0'}`}
           autoPlay
           muted
           loop
           playsInline
-          poster={HERO_IMAGES[0]}
+          preload="auto"
+          onCanPlay={() => setHeroReady(true)}
           aria-hidden="true"
         >
           <source src={HERO_VIDEO} type="video/mp4" />
