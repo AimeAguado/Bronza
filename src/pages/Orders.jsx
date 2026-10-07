@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { apiUrl } from '../lib/api.js'
+import Footer from '../components/Footer.jsx'
 
 function formatMoney(v) {
   return `$${Number(v).toFixed(2)}`
@@ -12,9 +13,9 @@ function formatDate(d) {
 }
 
 const STATUS_STYLES = {
-  approved: 'bg-green-100 text-green-700',
-  pending: 'bg-yellow-100 text-yellow-700',
-  rejected: 'bg-red-100 text-red-700',
+  approved: 'bg-primary text-background-light',
+  pending: 'bg-accent text-primary',
+  rejected: 'bg-accent-muted text-primary',
 }
 
 const STATUS_LABELS = {
@@ -39,7 +40,7 @@ export default function Orders() {
   }, [token])
 
   return (
-    <div className="min-h-screen bg-background-light pt-24 px-6 pb-12 text-text-main">
+    <div className="min-h-screen bg-background-light pt-24 px-6 pb-12 text-text-main flex flex-col">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-black uppercase tracking-tighter">Mis pedidos</h2>
@@ -78,6 +79,7 @@ export default function Orders() {
           </ul>
         )}
       </div>
+      <Footer />
     </div>
   )
 }

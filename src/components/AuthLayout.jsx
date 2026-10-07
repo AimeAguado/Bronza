@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Database } from 'lucide-react'
+import Footer from './Footer.jsx'
 
 export default function AuthLayout({ children, title, subtitle }) {
   return (
-    <div className="min-h-screen bg-background-light pt-20 px-6 pb-12 text-text-main">
+    <div className="min-h-screen bg-background-light pt-20 px-6 pb-12 text-text-main flex flex-col">
       <div className="max-w-md mx-auto">
         <Link
           to="/"
@@ -23,6 +24,7 @@ export default function AuthLayout({ children, title, subtitle }) {
           <div className="mt-8">{children}</div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

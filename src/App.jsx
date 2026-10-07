@@ -6,20 +6,28 @@ import { useCart } from './context/useCart.js';
 import { useAuth } from './hooks/useAuth.js';
 import { apiUrl } from './lib/api.js';
 import ProductModal from './components/ProductModal.jsx';
+import Footer from './components/Footer.jsx';
 
 const COLLECTIONS = {
-  'winter-26': { label: 'Winter 26', categories: ['Sweters', 'Pantalones', 'Remeras'] },
-  'nightwear': { label: 'Nightwear', categories: ['Shorts', 'Chalecos', 'Bodys'] },
-  'summer-27': { label: 'Summer 27', categories: [] },
+  'summer-27': { label: 'Summer 27', categories: ['Sweters', 'Pantalones', 'Remeras', 'Bikinis'] },
 };
+
+const ABOUT_TEXT = `Bronza nació de las ganas de sentirnos lindas, cómodas y libres en nuestra propia piel.
+
+Somos una marca de bikinis pensada para acompañarte en esos días de sol, playa, verano y momentos que se quedan para siempre.
+
+Después de un tiempo, volvemos con una nueva temporada, nuevos diseños y las mismas ganas de hacerte sentir increíble cada vez que elegís Bronza.
+
+Temporada 2027.
+
+Bronzate. Brilla. Viví. ☀️`;
 
 const HERO_IMAGES = [
   'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380397/bronza-products/abzeo3ezvicgs1yizaoq.jpg',
-  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380398/bronza-products/ifepbwmrnhfw515pcucc.jpg',
-  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380398/bronza-products/zpyusoux82tol5idck3v.jpg',
-  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380402/bronza-products/g6aorzkoyfpd4jli8l4k.jpg',
-  'https://res.cloudinary.com/dhkhgloxn/image/upload/v1781380405/bronza-products/llcyigszegow9kf1u1wn.jpg',
 ];
+
+const HERO_VIDEO =
+  'https://videos.pexels.com/video-files/36346838/15416216_1280_720_30fps.mp4';
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -33,7 +41,8 @@ function App() {
   const { user, token, ready } = useAuth();
   const productsRef = useRef(null);
   const [activeCollection, setActiveCollection] = useState(null);
-  const [heroIndex, setHeroIndex] = useState(0);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const heroVideoRef = useRef(null);
 
   const filteredProducts =
     activeCollection && COLLECTIONS[activeCollection]
@@ -63,10 +72,18 @@ function App() {
   }, [activeCollection]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setHeroIndex((i) => (i + 1) % HERO_IMAGES.length);
-    }, 3000);
-    return () => clearInterval(timer);
+    const video = heroVideoRef.current;
+    if (!video) return;
+    video.muted = true;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      video.removeAttribute('autoplay');
+      const stop = () => video.pause();
+      video.addEventListener('loadeddata', stop);
+      video.pause();
+      return () => video.removeEventListener('loadeddata', stop);
+    }
+    video.play().catch(() => {});
+    return undefined;
   }, []);
 
   function handleCollectionClick(slug) {
@@ -142,45 +159,52 @@ function App() {
   const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen flex flex-col">
       {/* HEADER */}
-      <nav className="fixed inset-x-0 top-0 z-50 bg-background-light/80 backdrop-blur-md border-b border-accent-muted/40 px-6 py-4">
+      <nav className="fixed inset-x-0 top-0 z-50 bg-primary px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <button
             type="button"
             onClick={() => { setActiveCollection(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="flex items-center gap-2 cursor-pointer"
           >
-            <Database className="text-primary" size={24} />
-            <span className="font-black tracking-tighter text-xl uppercase">BRONZA CLUB</span>
+            <Database className="text-accent" size={24} />
+            <span className="font-black tracking-tighter text-xl uppercase text-background-light">BRONZA CLUB</span>
           </button>
-          <div className="hidden md:flex gap-8 text-[10px] font-bold tracking-[0.3em] uppercase">
+          <div className="hidden md:flex gap-8 text-[10px] font-bold tracking-[0.3em] uppercase text-background-light/75">
             {Object.entries(COLLECTIONS).map(([slug, { label }]) => (
               <button
                 key={slug}
                 type="button"
                 onClick={() => handleCollectionClick(slug)}
-                className={`transition-colors ${activeCollection === slug ? 'text-primary' : 'hover:text-primary'}`}
+                className={`transition-colors ${activeCollection === slug ? 'text-accent' : 'hover:text-accent'}`}
               >
                 {label}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setIsAboutOpen(true)}
+              className="transition-colors hover:text-accent"
+            >
+              Somos Bronza
+            </button>
           </div>
-          <div className="flex gap-4 sm:gap-5 items-center">
+          <div className="flex gap-4 sm:gap-5 items-center text-background-light">
             {user?.role === 'admin' && (
-              <Link to="/admin/products" className="text-[10px] font-bold uppercase tracking-wider text-primary hover:underline">
+              <Link to="/admin/products" className="text-[10px] font-bold uppercase tracking-wider text-accent hover:underline">
                 Admin
               </Link>
             )}
             {user && user.role !== 'admin' && (
-              <Link to="/orders" className="text-[10px] font-bold uppercase tracking-wider text-text-main/60 hover:text-primary transition-colors">
+              <Link to="/orders" className="text-[10px] font-bold uppercase tracking-wider text-background-light/60 hover:text-accent transition-colors">
                 Pedidos
               </Link>
             )}
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="flex items-center gap-2 text-text-main hover:text-primary transition-colors"
+              className="flex items-center gap-2 text-background-light hover:text-accent transition-colors"
               title={user ? `Cuenta: ${user.name}` : 'Iniciar sesión'}
               aria-label={user ? `Cuenta de ${user.name}` : 'Iniciar sesión'}
               {...(!user ? { 'data-testid': 'nav-login-link' } : {})}
@@ -195,7 +219,7 @@ function App() {
             <div className="relative cursor-pointer" data-testid="nav-cart-icon" onClick={() => navigate('/carrito')}>
               <ShoppingBag size={20} />
               {cart.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                <span className="absolute -top-2 -right-2 bg-accent text-primary text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                   {cart.reduce((a, b) => a + b.qty, 0)}
                 </span>
               )}
@@ -213,10 +237,10 @@ function App() {
             exit={{ y: -60, opacity: 0 }}
             className={`fixed top-[72px] inset-x-0 z-40 flex items-center justify-between px-6 py-3 text-sm font-bold uppercase tracking-widest ${
               paymentStatus === 'success'
-                ? 'bg-green-600 text-white'
+                ? 'bg-primary text-background-light'
                 : paymentStatus === 'failure'
-                ? 'bg-red-600 text-white'
-                : 'bg-yellow-500 text-black'
+                ? 'bg-accent-muted text-primary'
+                : 'bg-accent text-primary'
             }`}
           >
             <span>
@@ -232,51 +256,36 @@ function App() {
       </AnimatePresence>
 
       {/* HERO */}
-      <section className="relative min-h-[calc(100svh-5rem)] flex items-center justify-center bg-background-light overflow-hidden">
-        <AnimatePresence mode="wait">
-          <Motion.img
-            key={heroIndex}
-            src={HERO_IMAGES[heroIndex]}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 w-full h-full object-cover grayscale brightness-75"
-          />
-        </AnimatePresence>
+      <section className="relative min-h-svh flex items-center justify-center bg-primary overflow-hidden">
+        <video
+          ref={heroVideoRef}
+          className="absolute inset-0 w-full h-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={HERO_IMAGES[0]}
+          aria-hidden="true"
+        >
+          <source src={HERO_VIDEO} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/75 via-primary/35 to-primary/90" />
         <div className="relative z-10 text-center px-6">
-          <Motion.span initial={{opacity:0}} animate={{opacity:1}} className="text-text-main font-bold tracking-[0.5em] text-xs uppercase mb-6 block">Nightwear Collection</Motion.span>
-          <Motion.h1 initial={{y:30, opacity:0}} animate={{y:0, opacity:1}} className="text-7xl md:text-[10rem] font-black tracking-tighter uppercase leading-[0.85] mb-8">
-            BRONZA<br/><span className="text-text-main/40">CLUB</span>
+          <Motion.h1 initial={{y:30, opacity:0}} animate={{y:0, opacity:1}} className="text-7xl md:text-[10rem] font-black tracking-tighter uppercase leading-[0.85] mb-8 text-background-light">
+            BRONZA<br/><span className="text-background-light/50">CLUB</span>
           </Motion.h1>
-          <button onClick={() => productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="bg-text-main text-background-light px-12 py-5 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-primary transition-all scale-110">Shop the Drop</button>
-          <div className="flex justify-center gap-2 mt-8">
-            {HERO_IMAGES.map((_, i) => (
-              <span
-                key={i}
-                className={`w-2 h-2 rounded-full transition-all ${i === heroIndex ? 'bg-text-main w-6' : 'bg-text-main/30'}`}
-              />
-            ))}
-          </div>
+          <button onClick={() => productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="bg-accent text-primary px-12 py-5 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-background-light hover:text-primary transition-all scale-110">Shop the Drop</button>
         </div>
       </section>
 
       {/* PRODUCTS */}
       <main className="max-w-7xl mx-auto px-6 py-32">
-        {activeCollection === 'summer-27' ? (
-          <div ref={productsRef} className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-            <h2 className="text-5xl font-black tracking-tighter uppercase mb-6">Summer 27</h2>
-            <p className="text-text-main/50 uppercase tracking-widest font-bold text-sm">Próximamente</p>
-          </div>
-        ) : (
-          <>
-            <div ref={productsRef} className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
-              <h2 className="text-5xl font-black tracking-tighter uppercase">
-                {activeCollection ? COLLECTIONS[activeCollection].label : 'Shop the Drop'}
-              </h2>
-              <p className="max-w-xs text-sm text-text-main/50 uppercase tracking-wider font-medium italic">High-performance recovery apparel designed for post-training excellence.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div ref={productsRef} className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
+          <h2 className="text-5xl font-black tracking-tighter uppercase">
+            {activeCollection ? COLLECTIONS[activeCollection].label : 'Shop the Drop'}
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
               {filteredProducts.map(p => {
             const firstImg = p.variants?.[0]?.images?.[0]
             const firstColor = p.variants?.[0]?.color
@@ -286,11 +295,11 @@ function App() {
                 <div className="aspect-[3/4] overflow-hidden bg-accent-muted/20 rounded-xl relative mb-6">
                   <img
                     src={firstImg}
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                   />
                   <span
                     onClick={(e) => { e.stopPropagation(); openModal(p) }}
-                    className="absolute bottom-4 left-4 right-4 bg-text-main text-white py-4 rounded-lg font-bold text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all text-center block"
+                    className="absolute bottom-4 left-4 right-4 bg-accent text-primary py-4 rounded-lg font-bold text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all text-center block"
                   >
                     Quick View +
                   </span>
@@ -315,7 +324,7 @@ function App() {
                       })
                     }
                   }}
-                  className="mt-3 w-full bg-primary text-white py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:brightness-110 transition-all"
+                  className="mt-3 w-full bg-primary text-background-light py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-accent hover:text-primary transition-all"
                 >
                   Agregar al carrito
                 </button>
@@ -323,8 +332,6 @@ function App() {
             )
           })}
             </div>
-          </>
-        )}
       </main>
 
       {/* PRODUCT MODAL */}
@@ -368,7 +375,7 @@ function App() {
                         <button
                           type="button"
                           onClick={() => removeFromCart(item.id)}
-                          className="rounded-lg p-1.5 text-text-main/30 transition-colors hover:bg-red-50 hover:text-red-500"
+                          className="rounded-lg p-1.5 text-text-main/40 transition-colors hover:bg-accent/30 hover:text-primary"
                           aria-label={`Eliminar ${item.name}`}
                         >
                           <Trash2 size={14} />
@@ -389,7 +396,7 @@ function App() {
                     setIsCartOpen(false);
                     navigate('/checkout');
                   }}
-                  className="w-full bg-primary text-white py-5 rounded-xl font-bold uppercase tracking-widest text-xs hover:brightness-110 transition-all"
+                  className="w-full bg-primary text-background-light py-5 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent hover:text-primary transition-all"
                 >
                   PROCEED TO CHECKOUT
                 </button>
@@ -399,7 +406,33 @@ function App() {
         )}
       </AnimatePresence>
 
+      {/* ABOUT US MODAL */}
+      <AnimatePresence>
+        {isAboutOpen && (
+          <>
+            <Motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setIsAboutOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" />
+            <Motion.div initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.95, opacity:0}} transition={{type:'spring', damping:25, stiffness:300}} className="fixed inset-x-0 top-1/2 -translate-y-1/2 mx-4 z-[60] max-w-2xl md:mx-auto">
+              <div className="relative bg-background-light rounded-2xl shadow-2xl p-8 md:p-12">
+                <button
+                  type="button"
+                  onClick={() => setIsAboutOpen(false)}
+                  className="absolute top-4 right-4 p-2 text-text-main/40 hover:text-primary transition-colors"
+                  aria-label="Cerrar"
+                >
+                  <X size={20} />
+                </button>
+                <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-8">Somos Bronza</h2>
+                <div className="space-y-6 text-text-main/80 leading-relaxed text-base whitespace-pre-line">
+                  {ABOUT_TEXT}
+                </div>
+              </div>
+            </Motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* WHATSAPP BUTTON */}
+
       <a
         href="https://wa.me/5491100000000?text=Hola!%20Quiero%20hacer%20una%20consulta"
         target="_blank"
@@ -412,6 +445,8 @@ function App() {
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
         </svg>
       </a>
+
+      <Footer />
     </div>
   );
 }

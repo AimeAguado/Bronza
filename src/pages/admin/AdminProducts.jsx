@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth.js'
 import { apiUrl } from '../../lib/api.js'
 import { X, Plus, Trash2, Pencil, Eye, EyeOff, ImagePlus } from 'lucide-react'
+import Footer from '../../components/Footer.jsx'
 
 const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL']
 const EMPTY_VARIANT = { color: '', files: [], existingImages: [], stock: {} }
@@ -231,7 +232,7 @@ function ProductModal({ open, product, onClose, onSave, token }) {
                     </div>
                   </div>
                   <button type="button" onClick={() => removeVariant(idx)}
-                    className="ml-3 text-red-500 text-xs font-bold uppercase hover:underline tracking-widest shrink-0">
+                    className="ml-3 text-accent-muted text-xs font-bold uppercase hover:text-primary hover:underline tracking-widest shrink-0">
                     Eliminar
                   </button>
                 </div>
@@ -244,7 +245,7 @@ function ProductModal({ open, product, onClose, onSave, token }) {
                         <button type="button" onClick={() => {
                           updateVariant(idx, { existingImages: variant.existingImages.filter((_, j) => j !== i) })
                         }}
-                          className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                          className="absolute -top-1.5 -right-1.5 bg-primary text-background-light rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                           x
                         </button>
                       </div>
@@ -257,7 +258,7 @@ function ProductModal({ open, product, onClose, onSave, token }) {
                           const newFiles = variant.files.filter((_, j) => j !== i)
                           updateVariant(idx, { files: newFiles })
                         }}
-                          className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                          className="absolute -top-1.5 -right-1.5 bg-primary text-background-light rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                           x
                         </button>
                       </div>
@@ -284,10 +285,10 @@ function ProductModal({ open, product, onClose, onSave, token }) {
             ))}
           </div>
 
-          {error && <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">{error}</p>}
+          {error && <p className="text-xs font-bold text-primary bg-accent/20 p-2 rounded-lg">{error}</p>}
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={saving}
-              className="bg-primary text-white px-8 py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50">
+              className="bg-primary text-background-light px-8 py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all disabled:opacity-50">
               {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear producto'}
             </button>
             <button type="button" onClick={onClose}
@@ -350,7 +351,7 @@ export default function AdminProducts() {
   }
 
   return (
-    <div className="min-h-screen bg-background-light pt-24 px-6 pb-12 text-text-main">
+    <div className="min-h-screen bg-background-light pt-24 px-6 pb-12 text-text-main flex flex-col">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-black uppercase tracking-tighter">Admin — Productos</h2>
@@ -361,7 +362,7 @@ export default function AdminProducts() {
         </div>
 
         <button onClick={openCreateModal}
-          className="mb-6 bg-primary text-white px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all flex items-center gap-2">
+          className="mb-6 bg-primary text-background-light px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all flex items-center gap-2">
           <Plus size={14} /> Nuevo producto
         </button>
 
@@ -391,7 +392,7 @@ export default function AdminProducts() {
                       <td className="px-4 py-3">${p.price}</td>
                       <td className="px-4 py-3 text-text-main/60 text-xs">{sizesStr}</td>
                       <td className="px-4 py-3">
-                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${p.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${p.active ? 'bg-primary text-background-light' : 'bg-accent-muted text-primary'}`}>
                           {p.active ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
@@ -402,7 +403,7 @@ export default function AdminProducts() {
                             <Pencil size={12} /> Editar
                           </button>
                           <button onClick={() => handleToggleActive(p._id)}
-                            className={`flex items-center gap-1 text-xs font-bold uppercase hover:underline ${p.active ? 'text-red-500' : 'text-green-600'}`}>
+                            className={`flex items-center gap-1 text-xs font-bold uppercase hover:underline ${p.active ? 'text-accent-muted hover:text-primary' : 'text-primary'}`}>
                             {p.active ? <><EyeOff size={12} /> Desactivar</> : <><Eye size={12} /> Activar</>}
                           </button>
                         </div>
@@ -424,6 +425,7 @@ export default function AdminProducts() {
         onSave={() => { closeModal(); fetchProducts(); window.dispatchEvent(new Event('products-updated')) }}
         token={token}
       />
+      <Footer />
     </div>
   )
 }

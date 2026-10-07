@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/useCart.js'
+import Footer from '../components/Footer.jsx'
 
 export default function CartPage() {
   const navigate = useNavigate()
@@ -8,7 +9,7 @@ export default function CartPage() {
   const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0)
 
   return (
-    <div className="min-h-screen bg-background-light pt-20 px-6 pb-12 text-text-main">
+    <div className="min-h-screen bg-background-light pt-20 px-6 pb-12 text-text-main flex flex-col">
       <div className="max-w-lg mx-auto">
         <h2 className="text-2xl font-black uppercase tracking-tighter">
           Tu carrito
@@ -79,7 +80,7 @@ export default function CartPage() {
                         type="button"
                         data-testid="cart-item-remove-button"
                         onClick={() => removeFromCart(item.id)}
-                        className="rounded-lg p-1.5 text-text-main/30 transition-colors hover:bg-red-50 hover:text-red-500"
+                        className="rounded-lg p-1.5 text-text-main/40 transition-colors hover:bg-accent/30 hover:text-primary"
                       >
                         Eliminar
                       </button>
@@ -100,7 +101,7 @@ export default function CartPage() {
                 type="button"
                 data-testid="cart-checkout-button"
                 onClick={() => navigate('/checkout')}
-                className="w-full bg-primary text-white py-5 rounded-xl font-bold uppercase tracking-widest text-xs hover:brightness-110 transition-all"
+                className="w-full bg-primary text-background-light py-5 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent hover:text-primary transition-all"
               >
                 Ir a checkout
               </button>
@@ -114,12 +115,13 @@ export default function CartPage() {
             data-testid="cart-checkout-button"
             disabled
             onClick={() => navigate('/checkout')}
-            className="mt-8 w-full bg-primary text-white py-5 rounded-xl font-bold uppercase tracking-widest text-xs opacity-40 cursor-not-allowed"
+            className="mt-8 w-full bg-primary text-background-light py-5 rounded-xl font-bold uppercase tracking-widest text-xs opacity-40 cursor-not-allowed"
           >
             Ir a checkout
           </button>
         )}
       </div>
+      <Footer />
     </div>
   )
 }

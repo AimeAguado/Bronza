@@ -23,7 +23,7 @@ export default function Register() {
         </p>
         <Link
           to="/"
-          className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-primary"
+          className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-accent hover:text-primary"
         >
           Volver a la tienda
         </Link>
@@ -155,7 +155,7 @@ export default function Register() {
           type="submit"
           disabled={loading}
           data-testid="register-submit-button"
-          className="w-full rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-primary disabled:opacity-60"
+          className="w-full rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-accent hover:text-primary disabled:opacity-60"
         >
           {loading ? 'Creando cuenta…' : 'Registrarme'}
         </button>

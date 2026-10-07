@@ -29,6 +29,10 @@ export default defineConfig({
       return config;
     },
     specPattern: "cypress/e2e/**/*.cy.js",
+    excludeSpecPattern: [
+      "**/1-getting-started/**",
+      "**/2-advanced-examples/**",
+    ],
     supportFile: "cypress/support/e2e.js",
   },
 

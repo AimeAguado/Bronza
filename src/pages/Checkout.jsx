@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/useCart.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { apiUrl } from '../lib/api.js'
+import Footer from '../components/Footer.jsx'
 
 /** Respaldo si el servidor no tiene Mercado Pago o falla la preferencia */
 const FALLBACK_MP_URL =
@@ -96,7 +97,7 @@ const Checkout = () => {
     'https://wa.me/549XXXXXXXXX?text=' + encodeURIComponent(supportMessage)
 
   return (
-    <div className="min-h-screen bg-background-light pt-20 px-6 pb-12 text-text-main">
+    <div className="min-h-screen bg-background-light pt-20 px-6 pb-12 text-text-main flex flex-col">
       <div className="max-w-lg mx-auto">
         <h2 className="text-2xl font-black uppercase tracking-tighter">
           Finalizar compra
@@ -247,6 +248,7 @@ const Checkout = () => {
           </a>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

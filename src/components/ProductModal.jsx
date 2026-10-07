@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { AnimatePresence, motion as Motion } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, ShoppingBag, Ruler } from 'lucide-react'
 
 const COLOR_MAP = {
   negro: '#111111',
@@ -9,16 +9,25 @@ const COLOR_MAP = {
   azul: '#1a5276',
   blanco: '#f5f5f5',
   bordo: '#800020',
+  unico: '#de8bbd',
 }
 
+const SIZE_CHART = [
+  { size: 'S', range: '85 / 90' },
+  { size: 'M', range: '90 / 95' },
+  { size: 'L', range: '95 / 100' },
+  { size: 'XL', range: '100 / 105' },
+]
+
 function getColorHex(name) {
-  return COLOR_MAP[name?.toLowerCase().trim()] ?? '#888'
+  const k=name?.toLowerCase().trim(); if(k==='unico'||k==='único') return COLOR_MAP.unico??'#de8bbd'; return COLOR_MAP[k] ?? '#888'
 }
 
 function ModalContent({ product, onClose, onAddToCart }) {
   const [selectedColorIdx, setSelectedColorIdx] = useState(0)
   const [selectedSize, setSelectedSize] = useState('')
   const [imgIdx, setImgIdx] = useState(0)
+  const [showSizeChart, setShowSizeChart] = useState(false)
 
   const variants = product.variants ?? []
   const currentVariant = variants[selectedColorIdx]
@@ -104,7 +113,13 @@ function ModalContent({ product, onClose, onAddToCart }) {
           {product.name}
         </h2>
 
-        <p className="text-2xl font-bold mb-6">${product.price.toLocaleString('es-AR')}</p>
+        <p className="text-2xl font-bold mb-4">${product.price.toLocaleString('es-AR')}</p>
+
+        {product.description && (
+          <p className="mb-6 text-sm leading-relaxed whitespace-pre-line text-text-main/70">
+            {product.description}
+          </p>
+        )}
 
         {variants.length > 0 && (
           <div className="mb-6">
@@ -127,8 +142,18 @@ function ModalContent({ product, onClose, onAddToCart }) {
 
         {sizes.length > 0 && (
           <div className="mb-6">
-            <h4 className="text-xs font-bold uppercase tracking-widest mb-3">
-              Talle: {selectedSize ? <span className="text-text-main/60">{selectedSize}</span> : <span className="text-red-500">* Seleccioná un talle</span>}
+            <h4 className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center justify-between gap-2">
+              <span>
+                Talle: {selectedSize ? <span className="text-text-main/60">{selectedSize}</span> : <span className="text-primary font-bold">* Seleccioná un talle</span>}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowSizeChart(true)}
+                className="inline-flex items-center gap-1 text-[10px] text-text-main/50 underline-offset-2 hover:text-primary hover:underline"
+              >
+                <Ruler size={12} />
+                Ver tabla
+              </button>
             </h4>
             <div className="flex flex-wrap gap-2">
               {sizes.map(size => {
@@ -159,13 +184,39 @@ function ModalContent({ product, onClose, onAddToCart }) {
           disabled={!selectedSize}
           className={`mt-auto w-full py-4 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all
             ${selectedSize
-              ? 'bg-primary text-white hover:brightness-110'
+              ? 'bg-primary text-background-light hover:bg-accent hover:text-primary'
               : 'bg-accent-muted/30 text-accent-muted/60 cursor-not-allowed'
             }`}
         >
           <ShoppingBag size={16} />
           {selectedSize ? 'Agregar al carrito' : 'Seleccioná un talle'}
-        </button>
+        </button>        {/* SIZE CHART MODAL */}
+        {showSizeChart && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Tabla de talles">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowSizeChart(false)} />
+            <div className="relative w-full max-w-md rounded-2xl bg-background-light p-8 shadow-2xl">
+              <button type="button" onClick={() => setShowSizeChart(false)} className="absolute right-4 top-4 rounded-full p-2 text-text-main/50 transition-colors hover:bg-white hover:text-primary" aria-label="Cerrar tabla de talles">
+                <X size={20} />
+              </button>
+              <h3 className="mb-1 text-2xl font-black uppercase tracking-tighter">Tabla de talles</h3>
+              <p className="mb-6 text-[10px] font-bold uppercase tracking-[0.2em] text-text-main/50">Medidas en centímetros</p>
+              <table className="w-full overflow-hidden rounded-xl border border-accent-muted/30 text-sm">
+                <thead className="bg-primary text-[10px] uppercase tracking-widest text-background-light">
+                  <tr><th className="px-4 py-3 text-left font-bold">Talle</th><th className="px-4 py-3 text-left font-bold">Medida (cm)</th></tr>
+                </thead>
+                <tbody className="divide-y divide-accent-muted/20 bg-white/70">
+                  {SIZE_CHART.map((row) => (
+                    <tr key={row.size}>
+                      <td className="px-4 py-3 font-bold uppercase">{row.size}</td>
+                      <td className="px-4 py-3 text-text-main/80">{row.range}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )

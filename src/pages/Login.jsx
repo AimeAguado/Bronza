@@ -26,7 +26,7 @@ export default function Login() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="w-full rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-primary"
+            className="w-full rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-accent hover:text-primary"
           >
             Volver a la tienda
           </button>
@@ -122,7 +122,7 @@ export default function Login() {
           type="submit"
           disabled={loading}
           data-testid="login-submit-button"
-          className="w-full rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-primary disabled:opacity-60"
+          className="w-full rounded-xl bg-text-main py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-accent hover:text-primary disabled:opacity-60"
         >
           {loading ? 'Entrando…' : 'Entrar'}
         </button>

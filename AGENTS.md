@@ -8,9 +8,11 @@ npm run dev            # Frontend only
 npm run dev:api        # Backend only (uses `node --watch src/index.js` in server/)
 npm run build          # Vite build → dist/
 npm run lint           # ESLint (flat config, eslint.config.js)
+npx playwright test    # E2E (tests/e2e/, config levanta dev:all solo)
+npx cypress run        # E2E (cypress/e2e/)
 ```
 
-No tests exist. No typecheck step.
+No typecheck step. `npm run lint` reports pre-existing errors in `cypress/e2e/2-advanced-examples/` (Cypress globals) — errors in `src/` are the signal that matters.
 
 ## Stack
 
@@ -75,5 +77,17 @@ Credentials: `admin@bronzaclub.com` / `bronzadmin2026`.
 ## Styling
 
 Tailwind v4 + `@theme` custom properties in `src/index.css`:
-- `--color-primary: #d2691e`, `--color-background-light: #ede6dd`, `--color-text-main: #111111`, `--color-accent-muted: #c7c1b4`
+- `--color-primary: #291e08` — marrón profundo: header, footer, fondos principales, textos, botones
+- `--color-background-light: #faf7f2` — lienzo claro de páginas (neutro, no es color de marca)
+- `--color-text-main: #291e08`
+- `--color-accent-muted: #9c8580` — fondos secundarios, cards, bordes suaves, textos secundarios
+- `--color-accent: #de8bbd` — acento: hover, badges, indicadores, CTA destacados
 - Use these tokens, not hardcoded hex values.
+
+Contraste: `#de8bbd` como **relleno** sobre fondo claro siempre con texto `#291e08` (6.4:1); como texto solo sobre `#291e08` (6.4:1). Nunca texto rosa chico sobre fondo claro (2.5:1). `#9c8580` siempre con texto `#291e08`, nunca con texto blanco.
+
+Excepciones fuera de paleta (a propósito): Mercado Pago `#009EE3` en `Checkout.jsx`, WhatsApp `#25d366` en `App.jsx`, y el `COLOR_MAP` de colores de producto en `ProductModal.jsx`.
+
+Portada: el hero (`src/App.jsx`) es un `<video>` de Pexels CDN (atardecer/playa) con `poster` de Cloudinary y overlay `bg-gradient-to-b from-primary/75 via-primary/35 to-primary/90`. Sin autoplay si `prefers-reduced-motion`.
+
+Footer: `src/components/Footer.jsx` (`bg-primary`), montado al final de cada página — no hay layout compartido, cada ruta es autónoma en `main.jsx`.
