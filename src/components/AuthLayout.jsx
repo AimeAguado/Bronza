@@ -10,7 +10,7 @@ export default function AuthLayout({ children, title, subtitle }) {
           aria-label="Volver al inicio"
           className="inline-flex items-center text-text-main/70 hover:text-primary transition-colors"
         >
-          <img src="/logo-wordmark.svg" alt="Bronza Club" className="h-7" />
+          <img src="/logo-wordmark.svg" alt="Bronza Club" className="h-9" />
         </Link>
 
         <div className="mt-10 rounded-2xl border border-accent-muted/50 bg-white/50 p-8 shadow-sm backdrop-blur-sm">
