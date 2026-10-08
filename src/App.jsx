@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, X, Plus, Minus, Trash2, User, Database } from 'lucide-react';
+import { ShoppingBag, X, Plus, Minus, Trash2, User } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from './context/useCart.js';
 import { useAuth } from './hooks/useAuth.js';
@@ -162,13 +162,13 @@ function App() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <button
             type="button"
+            aria-label="Volver arriba"
             onClick={() => { setActiveCollection(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="flex items-center gap-2 cursor-pointer"
           >
-            <Database className="text-accent" size={24} />
-            <span className="font-black tracking-tighter text-xl uppercase text-background-light">BRONZA CLUB</span>
+            <img src="/favicon.svg" alt="Bronza Club" className="h-11 w-11" />
           </button>
-          <div className="hidden md:flex gap-8 text-[10px] font-bold tracking-[0.3em] uppercase text-background-light/75">
+          <div className="hidden md:flex gap-8 text-xs font-bold tracking-[0.3em] uppercase text-background-light/75">
             {Object.entries(COLLECTIONS).map(([slug, { label }]) => (
               <button
                 key={slug}

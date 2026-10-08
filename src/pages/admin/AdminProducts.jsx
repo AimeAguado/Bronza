@@ -376,8 +376,8 @@ export default function AdminProducts() {
   }
 
   return (
-    <div className="min-h-screen bg-background-light pt-24 px-6 pb-12 text-text-main flex flex-col">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-background-light pt-10 px-6 pb-10 text-text-main flex flex-col">
+      <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col justify-center pt-8 pb-16">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-black uppercase tracking-tighter">Admin — Productos</h2>
           <div className="flex gap-4 text-xs font-bold uppercase tracking-widest">

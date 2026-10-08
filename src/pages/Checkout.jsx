@@ -97,8 +97,8 @@ const Checkout = () => {
     'https://wa.me/549XXXXXXXXX?text=' + encodeURIComponent(supportMessage)
 
   return (
-    <div className="min-h-screen bg-background-light pt-20 px-6 pb-12 text-text-main flex flex-col">
-      <div className="max-w-lg mx-auto">
+    <div className="min-h-screen bg-background-light pt-10 px-6 pb-10 text-text-main flex flex-col">
+      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col justify-center pt-8 pb-16">
         <h2 className="text-2xl font-black uppercase tracking-tighter">
           Finalizar compra
         </h2>
