@@ -32,32 +32,27 @@ function ProductModal({ open, product, onClose, onSave, token }) {
 
   const isEditing = !!product
 
-  const [prevOpen, setPrevOpen] = useState(open)
-  const [prevProduct, setPrevProduct] = useState(product)
-  if (open !== prevOpen || product !== prevProduct) {
-    setPrevOpen(open)
-    setPrevProduct(product)
-    if (open) {
-      if (product) {
-        setForm({
-          name: product.name ?? '',
-          description: product.description ?? '',
-          category: product.category ?? '',
-          price: product.price ?? '',
-          sizes: product.sizes ?? [],
-          variants: (product.variants ?? []).map(v => ({
-            color: v.color ?? '',
-            files: [],
-            existingImages: [...(v.images ?? [])],
-            stock: v.stock instanceof Map ? Object.fromEntries(v.stock) : (v.stock ?? {}),
-          })),
-        })
-      } else {
-        setForm(emptyForm())
-      }
-      setError('')
+  useEffect(() => {
+    if (!open) return
+    if (product) {
+      setForm({
+        name: product.name ?? '',
+        description: product.description ?? '',
+        category: product.category ?? '',
+        price: product.price ?? '',
+        sizes: product.sizes ?? [],
+        variants: (product.variants ?? []).map(v => ({
+          color: v.color ?? '',
+          files: [],
+          existingImages: [...(v.images ?? [])],
+          stock: v.stock instanceof Map ? Object.fromEntries(v.stock) : (v.stock ?? {}),
+        })),
+      })
+    } else {
+      setForm(emptyForm())
     }
-  }
+    setError('')
+  }, [open, product])
 
   if (!open) return null
 
@@ -226,7 +221,11 @@ function ProductModal({ open, product, onClose, onSave, token }) {
                         <ImagePlus size={14} className="text-primary" />
                         <span className="text-xs font-bold uppercase text-text-main/60">Subir fotos</span>
                         <input type="file" multiple accept="image/jpeg,image/png,image/webp"
-                          onChange={e => updateVariant(idx, { files: [...e.target.files] })}
+                          onChange={e => {
+                            const added = Array.from(e.target.files)
+                            e.target.value = ''
+                            if (added.length) updateVariant(idx, { files: [...variant.files, ...added] })
+                          }}
                           className="hidden" />
                       </label>
                     </div>
@@ -245,7 +244,7 @@ function ProductModal({ open, product, onClose, onSave, token }) {
                         <button type="button" onClick={() => {
                           updateVariant(idx, { existingImages: variant.existingImages.filter((_, j) => j !== i) })
                         }}
-                          className="absolute -top-1.5 -right-1.5 bg-primary text-background-light rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                          className="absolute -top-1.5 -right-1.5 bg-primary text-background-light rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-100 hover:bg-accent hover:text-primary transition">
                           x
                         </button>
                       </div>
@@ -258,7 +257,7 @@ function ProductModal({ open, product, onClose, onSave, token }) {
                           const newFiles = variant.files.filter((_, j) => j !== i)
                           updateVariant(idx, { files: newFiles })
                         }}
-                          className="absolute -top-1.5 -right-1.5 bg-primary text-background-light rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                          className="absolute -top-1.5 -right-1.5 bg-primary text-background-light rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-100 hover:bg-accent hover:text-primary transition">
                           x
                         </button>
                       </div>
@@ -331,7 +330,6 @@ export default function AdminProducts() {
   }
 
   function openEditModal(product) {
-    console.log('Abriendo modal para editar:', product.name)
     setEditingProduct(product)
     setModalOpen(true)
   }
