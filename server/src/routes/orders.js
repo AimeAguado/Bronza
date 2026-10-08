@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { isValidObjectId } from 'mongoose'
 import { Order } from '../models/Order.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
@@ -82,6 +83,23 @@ router.patch('/admin/:id/status', requireAdmin, async (req, res) => {
     }
     console.error(e)
     return res.status(500).json({ error: 'Error al actualizar el estado.' })
+  }
+})
+
+router.delete('/admin', requireAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body || {}
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Enviá al menos un pedido.' })
+    }
+    if (ids.some((id) => !isValidObjectId(id))) {
+      return res.status(400).json({ error: 'Ids inválidos.' })
+    }
+    const result = await Order.deleteMany({ _id: { $in: ids } })
+    return res.json({ ok: true, deleted: result.deletedCount })
+  } catch (e) {
+    console.error(e)
+    return res.status(500).json({ error: 'Error al eliminar los pedidos.' })
   }
 })
 

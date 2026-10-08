@@ -19,6 +19,18 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState(null)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+
+  const allSelected = orders.length > 0 && selectedIds.length === orders.length
+
+  function toggleSelect(id) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds(allSelected ? [] : orders.map((o) => o._id))
+  }
 
   useEffect(() => {
     fetch(apiUrl('/api/orders/admin'), {
@@ -73,11 +85,43 @@ export default function AdminOrders() {
         return
       }
       setOrders((prev) => prev.filter((o) => o._id !== order._id))
+      setSelectedIds((prev) => prev.filter((id) => id !== order._id))
     } catch (e) {
       console.error('[AdminOrders] delete error:', e)
       window.alert('Error de conexión al eliminar el pedido.')
     } finally {
       setSavingId(null)
+    }
+  }
+
+  async function handleDeleteSelected() {
+    const count = selectedIds.length
+    if (count === 0) return
+    const confirmed = window.confirm(
+      `¿Eliminar ${count} ${count === 1 ? 'pedido' : 'pedidos'}? Esta acción no se puede deshacer.`
+    )
+    if (!confirmed) return
+
+    setBulkDeleting(true)
+    try {
+      const res = await fetch(apiUrl('/api/orders/admin'), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ids: selectedIds }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        window.alert(data.error ?? 'Error al eliminar los pedidos.')
+        return
+      }
+      const removed = new Set(selectedIds)
+      setOrders((prev) => prev.filter((o) => !removed.has(o._id)))
+      setSelectedIds([])
+    } catch (e) {
+      console.error('[AdminOrders] bulk delete error:', e)
+      window.alert('Error de conexión al eliminar los pedidos.')
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -97,19 +141,53 @@ export default function AdminOrders() {
         ) : orders.length === 0 ? (
           <p className="text-sm text-text-main/60">No hay pedidos todavía.</p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-accent-muted/40">
-            <table className="w-full text-sm">
-              <thead className="bg-accent-muted/20 text-xs uppercase tracking-widest">
-                <tr>
-                  {['Fecha', 'Usuario', 'Items', 'Total', 'Estado', 'Acciones'].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left font-bold">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-accent-muted/20 bg-white/60">
-                {orders.map((order) => (
-                  <tr key={order._id}>
-                    <td className="px-4 py-3 whitespace-nowrap text-text-main/60">{formatDate(order.createdAt)}</td>
+          <>
+            {selectedIds.length > 0 && (
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-widest text-text-main/60">
+                  {selectedIds.length} seleccionado{selectedIds.length === 1 ? '' : 's'}
+                </p>
+                <button
+                  onClick={handleDeleteSelected}
+                  disabled={bulkDeleting}
+                  className="flex items-center gap-2 bg-primary text-background-light px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all disabled:opacity-50"
+                >
+                  <Trash2 size={14} />
+                  {bulkDeleting ? 'Eliminando…' : `Eliminar seleccionados (${selectedIds.length})`}
+                </button>
+              </div>
+            )}
+            <div className="overflow-x-auto rounded-xl border border-accent-muted/40">
+              <table className="w-full text-sm">
+                <thead className="bg-accent-muted/20 text-xs uppercase tracking-widest">
+                  <tr>
+                    <th className="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleSelectAll}
+                        aria-label="Seleccionar todos los pedidos"
+                        className="h-4 w-4 cursor-pointer accent-primary"
+                      />
+                    </th>
+                    {['Fecha', 'Usuario', 'Items', 'Total', 'Estado', 'Acciones'].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left font-bold">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-accent-muted/20 bg-white/60">
+                  {orders.map((order) => (
+                    <tr key={order._id} className={selectedIds.includes(order._id) ? 'bg-accent/10' : ''}>
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(order._id)}
+                          onChange={() => toggleSelect(order._id)}
+                          aria-label={`Seleccionar pedido de ${order.userId?.name ?? 'cliente'}`}
+                          className="h-4 w-4 cursor-pointer accent-primary"
+                        />
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-text-main/60">{formatDate(order.createdAt)}</td>
                     <td className="px-4 py-3">
                       <p className="font-semibold">{order.userId?.name ?? '—'}</p>
                       <p className="text-xs text-text-main/50">{order.userId?.email ?? ''}</p>
@@ -151,9 +229,10 @@ export default function AdminOrders() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
       <Footer />
