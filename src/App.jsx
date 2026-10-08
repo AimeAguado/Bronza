@@ -166,7 +166,7 @@ function App() {
             onClick={() => { setActiveCollection(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="flex items-center cursor-pointer"
           >
-            <img src="/logo-wordmark.svg" alt="Bronza Club" className="h-7" />
+            <img src="/logo-wordmark.svg" alt="Bronza Club" className="h-8" />
           </button>
           <div className="hidden md:flex gap-8 text-xs font-bold tracking-[0.3em] uppercase text-background-light/75">
             {Object.entries(COLLECTIONS).map(([slug, { label }]) => (
