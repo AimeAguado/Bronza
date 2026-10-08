@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { AnimatePresence, motion as Motion } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight, ShoppingBag, Ruler } from 'lucide-react'
+import { hasStock } from '../lib/stock.js'
 
 const COLOR_MAP = {
   negro: '#111111',
@@ -37,6 +38,7 @@ function ModalContent({ product, onClose, onAddToCart }) {
 
   const sizeStock = currentVariant?.stock ?? {}
   const isSizeAvailable = (size) => (sizeStock[size] ?? 0) > 0
+  const inStock = hasStock(product)
 
   function prevImage() {
     setImgIdx(i => (i - 1 + images.length) % images.length)
@@ -47,7 +49,7 @@ function ModalContent({ product, onClose, onAddToCart }) {
   }
 
   function handleAdd() {
-    if (!selectedSize) return
+    if (!selectedSize || !inStock) return
     onAddToCart({
       id: `${product._id}-${colorName}-${selectedSize}`,
       productId: product._id,
@@ -113,7 +115,14 @@ function ModalContent({ product, onClose, onAddToCart }) {
           {product.name}
         </h2>
 
-        <p className="text-2xl font-bold mb-4">${product.price.toLocaleString('es-AR')}</p>
+        <p className="text-2xl font-bold mb-4 flex items-center gap-3">
+          <span>${product.price.toLocaleString('es-AR')}</span>
+          {!inStock && (
+            <span className="text-[10px] font-bold uppercase tracking-widest bg-primary text-background-light px-2.5 py-1 rounded-full">
+              Sin stock
+            </span>
+          )}
+        </p>
 
         {product.description && (
           <p className="mb-6 text-sm leading-relaxed whitespace-pre-line text-text-main/70">
@@ -181,15 +190,15 @@ function ModalContent({ product, onClose, onAddToCart }) {
 
         <button
           onClick={handleAdd}
-          disabled={!selectedSize}
+          disabled={!selectedSize || !inStock}
           className={`mt-auto w-full py-4 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all
-            ${selectedSize
+            ${selectedSize && inStock
               ? 'bg-primary text-background-light hover:bg-accent hover:text-primary'
               : 'bg-accent-muted/30 text-accent-muted/60 cursor-not-allowed'
             }`}
         >
           <ShoppingBag size={16} />
-          {selectedSize ? 'Agregar al carrito' : 'Seleccioná un talle'}
+          {!inStock ? 'Sin stock' : selectedSize ? 'Agregar al carrito' : 'Seleccioná un talle'}
         </button>        {/* SIZE CHART MODAL */}
         {showSizeChart && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Tabla de talles">

@@ -13,7 +13,7 @@ describe("Carrito de compras", () => {
   });
 
   it("permite agregar un producto al carrito @smoke @regression", () => {
-    HomePage.productCards.first().within(() => {
+    HomePage.inStockProductCards.first().within(() => {
       cy.getByTestId("add-to-cart-button").click();
     });
 
@@ -22,7 +22,7 @@ describe("Carrito de compras", () => {
   });
 
   it("permite aumentar la cantidad de un producto @regression", () => {
-    HomePage.productCards.first().within(() => {
+    HomePage.inStockProductCards.first().within(() => {
       cy.getByTestId("add-to-cart-button").click();
     });
 
@@ -36,7 +36,7 @@ describe("Carrito de compras", () => {
   });
 
   it("permite eliminar un producto del carrito @regression", () => {
-    HomePage.productCards.first().within(() => {
+    HomePage.inStockProductCards.first().within(() => {
       cy.getByTestId("add-to-cart-button").click();
     });
 
@@ -47,10 +47,10 @@ describe("Carrito de compras", () => {
   });
 
   it("actualiza el total al agregar más de un producto @regression", () => {
-    HomePage.productCards.eq(0).within(() => {
+    HomePage.inStockProductCards.eq(0).within(() => {
       cy.getByTestId("add-to-cart-button").click();
     });
-    HomePage.productCards.eq(1).within(() => {
+    HomePage.inStockProductCards.eq(1).within(() => {
       cy.getByTestId("add-to-cart-button").click();
     });
 

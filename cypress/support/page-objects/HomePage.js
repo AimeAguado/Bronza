@@ -12,6 +12,10 @@ class HomePage {
     return cy.getByTestId("product-card");
   }
 
+  get inStockProductCards() {
+    return cy.get('[data-testid="product-card"][data-in-stock="true"]');
+  }
+
   get navLoginLink() {
     return cy.getByTestId("nav-login-link");
   }

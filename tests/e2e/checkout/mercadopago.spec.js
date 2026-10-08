@@ -21,7 +21,7 @@ test.describe("Checkout - Integración MercadoPago", () => {
 
     const home = new HomePage(page);
     await home.visit();
-    await home.productCards.first().getByTestId("add-to-cart-button").click();
+    await home.inStockProductCards.first().getByTestId("add-to-cart-button").click();
     await home.navCartIcon.click();
   });
 

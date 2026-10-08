@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from './context/useCart.js';
 import { useAuth } from './hooks/useAuth.js';
 import { apiUrl } from './lib/api.js';
+import { hasStock, firstAvailableSize } from './lib/stock.js';
 import ProductModal from './components/ProductModal.jsx';
 import Footer from './components/Footer.jsx';
 
@@ -41,10 +42,14 @@ function App() {
   const heroVideoRef = useRef(null);
   const [heroReady, setHeroReady] = useState(false);
 
-  const filteredProducts =
+  const visibleProducts =
     activeCollection && COLLECTIONS[activeCollection]
       ? products.filter((p) => COLLECTIONS[activeCollection].categories.includes(p.category))
       : products;
+
+  const filteredProducts = [...visibleProducts].sort(
+    (a, b) => Number(hasStock(b)) - Number(hasStock(a)),
+  );
 
   function scrollToProducts() {
     const el = productsRef.current;
@@ -287,14 +292,27 @@ function App() {
               {filteredProducts.map(p => {
             const firstImg = p.variants?.[0]?.images?.[0]
             const firstColor = p.variants?.[0]?.color
-            const firstSize = p.sizes?.[0]
+            const inStock = hasStock(p)
+            const quickSize = firstAvailableSize(p)
             return (
-              <div key={p._id} className="group cursor-pointer" onClick={() => openModal(p)} data-testid="product-card">
+              <div key={p._id} className="group cursor-pointer" onClick={() => openModal(p)} data-testid="product-card" data-in-stock={inStock ? 'true' : 'false'}>
                 <div className="aspect-[3/4] overflow-hidden bg-accent-muted/20 rounded-xl relative mb-6">
-                  <img
-                    src={firstImg}
-                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
-                  />
+                  {firstImg ? (
+                    <img
+                      src={firstImg}
+                      alt={p.name}
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-accent-muted">
+                      Sin imagen
+                    </div>
+                  )}
+                  {!inStock && (
+                    <span className="absolute top-4 left-4 bg-primary text-background-light px-3 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest">
+                      Sin stock
+                    </span>
+                  )}
                   <span
                     onClick={(e) => { e.stopPropagation(); openModal(p) }}
                     className="absolute bottom-4 left-4 right-4 bg-accent text-primary py-4 rounded-lg font-bold text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all text-center block"
@@ -308,23 +326,27 @@ function App() {
                 <button
                   type="button"
                   data-testid="add-to-cart-button"
+                  disabled={!inStock}
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (firstColor && firstSize) {
+                    if (!inStock) return
+                    if (firstColor && quickSize) {
                       addToCart({
-                        id: `${p._id}-${firstColor}-${firstSize}`,
+                        id: `${p._id}-${firstColor}-${quickSize}`,
                         productId: p._id,
                         name: p.name,
                         price: p.price,
                         image: firstImg ?? '',
                         color: firstColor,
-                        size: firstSize,
+                        size: quickSize,
                       })
+                    } else {
+                      openModal(p)
                     }
                   }}
-                  className="mt-3 w-full bg-primary text-background-light py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-accent hover:text-primary transition-all"
+                  className={`mt-3 w-full py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${inStock ? 'bg-primary text-background-light hover:bg-accent hover:text-primary' : 'bg-accent-muted/30 text-accent-muted/60 cursor-not-allowed'}`}
                 >
-                  Agregar al carrito
+                  {inStock ? 'Agregar al carrito' : 'Sin stock'}
                 </button>
               </div>
             )
