@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Trash2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth.js'
 import { apiUrl } from '../../lib/api.js'
 import { ORDER_STATUSES, STATUS_LABELS, STATUS_STYLES } from '../../lib/orderStatus.js'
@@ -54,6 +55,32 @@ export default function AdminOrders() {
     }
   }
 
+  async function handleDelete(order) {
+    const confirmed = window.confirm(
+      `¿Eliminar el pedido de ${order.userId?.name ?? 'cliente'} (${formatMoney(order.total)})? Esta acción no se puede deshacer.`
+    )
+    if (!confirmed) return
+
+    setSavingId(order._id)
+    try {
+      const res = await fetch(apiUrl(`/api/orders/admin/${order._id}`), {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        window.alert(data.error ?? 'Error al eliminar el pedido.')
+        return
+      }
+      setOrders((prev) => prev.filter((o) => o._id !== order._id))
+    } catch (e) {
+      console.error('[AdminOrders] delete error:', e)
+      window.alert('Error de conexión al eliminar el pedido.')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background-light pt-24 px-6 pb-12 text-text-main flex flex-col">
       <div className="max-w-5xl mx-auto">
@@ -74,7 +101,7 @@ export default function AdminOrders() {
             <table className="w-full text-sm">
               <thead className="bg-accent-muted/20 text-xs uppercase tracking-widest">
                 <tr>
-                  {['Fecha', 'Usuario', 'Items', 'Total', 'Estado'].map((h) => (
+                  {['Fecha', 'Usuario', 'Items', 'Total', 'Estado', 'Acciones'].map((h) => (
                     <th key={h} className="px-4 py-3 text-left font-bold">{h}</th>
                   ))}
                 </tr>
@@ -112,6 +139,15 @@ export default function AdminOrders() {
                           ))}
                         </select>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleDelete(order)}
+                        disabled={savingId === order._id}
+                        className="flex items-center gap-1 text-xs font-bold uppercase text-accent-muted hover:text-primary hover:underline disabled:opacity-50"
+                      >
+                        <Trash2 size={12} /> Eliminar
+                      </button>
                     </td>
                   </tr>
                 ))}

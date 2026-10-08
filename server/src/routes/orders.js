@@ -85,4 +85,18 @@ router.patch('/admin/:id/status', requireAdmin, async (req, res) => {
   }
 })
 
+router.delete('/admin/:id', requireAdmin, async (req, res) => {
+  try {
+    const order = await Order.findByIdAndDelete(req.params.id)
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada.' })
+    return res.json({ ok: true, order })
+  } catch (e) {
+    if (e.name === 'CastError') {
+      return res.status(404).json({ error: 'Orden no encontrada.' })
+    }
+    console.error(e)
+    return res.status(500).json({ error: 'Error al eliminar el pedido.' })
+  }
+})
+
 export default router
