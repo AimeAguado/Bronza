@@ -14,7 +14,15 @@ const orderSchema = new Schema(
     total: { type: Number, required: true },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: [
+        'pending',
+        'waiting_payment',
+        'approved',
+        'shipped',
+        'delivered',
+        'rejected',
+        'cancelled',
+      ],
       default: 'pending',
     },
     externalReference: { type: String, index: true },

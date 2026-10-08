@@ -30,6 +30,7 @@ No typecheck step. `npm run lint` reports pre-existing errors in `cypress/e2e/2-
 - **API helper is `src/lib/api.js`**, exports `apiUrl(path)`. Not `apiUrl.js`.
 - **Backend auto-reconnects MongoDB** on every request via middleware in `app.js` line 19 (`connectDB().then(next).catch(next)`). Connection is idempotent.
 - **JWT payload:** `{ sub, email, name, role }`. `requireAuth` middleware sets `req.user = { id, email, name, role }`.
+- **Order statuses:** `pending`, `waiting_payment`, `approved`, `shipped`, `delivered`, `rejected`, `cancelled`. Labels/styles en `src/lib/orderStatus.js` (compartido por `Orders.jsx` y `AdminOrders.jsx`). Admin cambia estado con `PATCH /api/orders/admin/:id/status`; `/api/orders/confirm` (retorno de Mercado Pago) no pisa estados `shipped`/`delivered`/`cancelled`.
 
 ## Routes
 

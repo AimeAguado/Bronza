@@ -126,7 +126,7 @@ function App() {
         ? 'approved'
         : collectionStatus === 'rejected'
           ? 'rejected'
-          : 'pending';
+          : 'waiting_payment';
 
     fetch(apiUrl('/api/orders/confirm'), {
       method: 'PATCH',

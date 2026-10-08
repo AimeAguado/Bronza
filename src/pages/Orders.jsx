@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { apiUrl } from '../lib/api.js'
+import { STATUS_LABELS, STATUS_STYLES } from '../lib/orderStatus.js'
 import Footer from '../components/Footer.jsx'
 
 function formatMoney(v) {
@@ -10,18 +11,6 @@ function formatMoney(v) {
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
-const STATUS_STYLES = {
-  approved: 'bg-primary text-background-light',
-  pending: 'bg-accent text-primary',
-  rejected: 'bg-accent-muted text-primary',
-}
-
-const STATUS_LABELS = {
-  approved: 'Aprobado',
-  pending: 'Pendiente',
-  rejected: 'Rechazado',
 }
 
 export default function Orders() {

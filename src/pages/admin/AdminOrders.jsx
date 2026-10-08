@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth.js'
 import { apiUrl } from '../../lib/api.js'
+import { ORDER_STATUSES, STATUS_LABELS, STATUS_STYLES } from '../../lib/orderStatus.js'
 import Footer from '../../components/Footer.jsx'
 
 function formatMoney(v) {
@@ -12,22 +13,11 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-const STATUS_STYLES = {
-  approved: 'bg-primary text-background-light',
-  pending: 'bg-accent text-primary',
-  rejected: 'bg-accent-muted text-primary',
-}
-
-const STATUS_LABELS = {
-  approved: 'Aprobado',
-  pending: 'Pendiente',
-  rejected: 'Rechazado',
-}
-
 export default function AdminOrders() {
   const { token } = useAuth()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [savingId, setSavingId] = useState(null)
 
   useEffect(() => {
     fetch(apiUrl('/api/orders/admin'), {
@@ -41,6 +31,28 @@ export default function AdminOrders() {
       .catch((e) => console.error('[AdminOrders] fetch error:', e))
       .finally(() => setLoading(false))
   }, [token])
+
+  async function updateStatus(id, status) {
+    setSavingId(id)
+    try {
+      const res = await fetch(apiUrl(`/api/orders/admin/${id}/status`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        window.alert(data.error ?? 'Error al actualizar el estado.')
+        return
+      }
+      setOrders((prev) => prev.map((o) => (o._id === id ? { ...o, status: data.order.status } : o)))
+    } catch (e) {
+      console.error('[AdminOrders] status error:', e)
+      window.alert('Error de conexión al actualizar el estado.')
+    } finally {
+      setSavingId(null)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background-light pt-24 px-6 pb-12 text-text-main flex flex-col">
@@ -84,9 +96,22 @@ export default function AdminOrders() {
                     </td>
                     <td className="px-4 py-3 font-bold">{formatMoney(order.total)}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${STATUS_STYLES[order.status] ?? ''}`}>
-                        {STATUS_LABELS[order.status] ?? order.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full whitespace-nowrap ${STATUS_STYLES[order.status] ?? ''}`}>
+                          {STATUS_LABELS[order.status] ?? order.status}
+                        </span>
+                        <select
+                          value={order.status}
+                          disabled={savingId === order._id}
+                          onChange={(e) => updateStatus(order._id, e.target.value)}
+                          aria-label={`Cambiar estado del pedido de ${order.userId?.name ?? 'cliente'}`}
+                          className="rounded-lg border border-accent-muted/60 bg-white px-2 py-1.5 text-xs font-bold uppercase tracking-wide text-text-main focus:outline-none focus:border-primary disabled:opacity-50"
+                        >
+                          {ORDER_STATUSES.map((s) => (
+                            <option key={s.value} value={s.value}>{s.label}</option>
+                          ))}
+                        </select>
+                      </div>
                     </td>
                   </tr>
                 ))}
