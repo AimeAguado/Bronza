@@ -13,8 +13,8 @@ function Footer() {
     <footer className="bg-primary text-background-light mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-16 grid gap-12 md:grid-cols-3">
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <img src="/favicon.svg" alt="Bronza Club" className="h-10 w-10" />
+          <div className="flex items-center mb-4">
+            <img src="/logo-wordmark.svg" alt="Bronza Club" className="h-7" />
           </div>
           <p className="text-background-light/60 text-sm leading-relaxed max-w-xs">
             Bikinis para vivir el verano a tu manera.
