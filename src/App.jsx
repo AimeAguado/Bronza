@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, X, Plus, Minus, Trash2, User } from 'lucide-react';
+import { ShoppingBag, X, Plus, Minus, Trash2, User, Menu } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from './context/useCart.js';
 import { useAuth } from './hooks/useAuth.js';
+import { useCompraTranquila } from './hooks/useCompraTranquila.js';
 import { apiUrl } from './lib/api.js';
 import { hasStock, firstAvailableSize } from './lib/stock.js';
 import ProductModal from './components/ProductModal.jsx';
 import Footer from './components/Footer.jsx';
 
 const COLLECTIONS = {
-  'summer-27': { label: 'Summer 27', categories: ['Sweters', 'Pantalones', 'Remeras', 'Bikinis'] },
+  'summer-27': { label: 'SUMMER 27', categories: ['Sweters', 'Pantalones', 'Remeras', 'Bikinis'] },
 };
 
 const ABOUT_TEXT = `Bronza nació de las ganas de sentirnos lindas, cómodas y libres en nuestra propia piel.
@@ -36,9 +37,11 @@ function App() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { cart, addToCart, updateQty, removeFromCart, setCart } = useCart();
   const { user, token, ready } = useAuth();
+  const { open: openCompraTranquila } = useCompraTranquila();
   const productsRef = useRef(null);
   const [activeCollection, setActiveCollection] = useState(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const heroVideoRef = useRef(null);
   const [heroReady, setHeroReady] = useState(false);
 
@@ -168,12 +171,19 @@ function App() {
           <button
             type="button"
             aria-label="Volver arriba"
-            onClick={() => { setActiveCollection(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onClick={() => { setIsMenuOpen(false); setActiveCollection(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="flex items-center cursor-pointer"
           >
             <img src="/logo-wordmark.svg" alt="Bronza Club" className="h-6" />
           </button>
           <div className="hidden md:flex gap-8 text-xs font-bold tracking-[0.3em] uppercase text-background-light/75">
+            <Link
+              to="/"
+              onClick={() => { setActiveCollection(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="transition-colors hover:text-accent"
+            >
+              Inicio
+            </Link>
             {Object.entries(COLLECTIONS).map(([slug, { label }]) => (
               <button
                 key={slug}
@@ -189,7 +199,14 @@ function App() {
               onClick={() => setIsAboutOpen(true)}
               className="transition-colors hover:text-accent"
             >
-              Somos Bronza
+              SOMOS BRONZA
+            </button>
+            <button
+              type="button"
+              onClick={openCompraTranquila}
+              className="transition-colors hover:text-accent"
+            >
+              COMPRA TRANQUILA
             </button>
           </div>
           <div className="flex gap-4 sm:gap-5 items-center text-background-light">
@@ -226,8 +243,65 @@ function App() {
                 </span>
               )}
             </div>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              className="md:hidden text-background-light hover:text-accent transition-colors"
+              aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
+            >
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
         </div>
+
+        <AnimatePresence>
+          {isMenuOpen && (
+            <Motion.div
+              id="mobile-menu"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="max-w-7xl mx-auto flex flex-col text-xs font-bold tracking-[0.3em] uppercase text-background-light/75">
+                <Link
+                  to="/"
+                  onClick={() => { setIsMenuOpen(false); setActiveCollection(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="border-t border-background-light/10 py-4 transition-colors hover:text-accent"
+                >
+                  Inicio
+                </Link>
+                {Object.entries(COLLECTIONS).map(([slug, { label }]) => (
+                  <button
+                    key={slug}
+                    type="button"
+                    onClick={() => { setIsMenuOpen(false); handleCollectionClick(slug); }}
+                    className={`border-t border-background-light/10 py-4 text-left transition-colors ${activeCollection === slug ? 'text-accent' : 'hover:text-accent'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => { setIsMenuOpen(false); setIsAboutOpen(true); }}
+                  className="border-t border-background-light/10 py-4 text-left transition-colors hover:text-accent"
+                >
+                  SOMOS BRONZA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsMenuOpen(false); openCompraTranquila(); }}
+                  className="border-t border-background-light/10 py-4 text-left transition-colors hover:text-accent"
+                >
+                  COMPRA TRANQUILA
+                </button>
+              </div>
+            </Motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* PAYMENT STATUS BANNER */}
@@ -441,7 +515,7 @@ function App() {
                 >
                   <X size={20} />
                 </button>
-                <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-8">Somos Bronza</h2>
+                <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-8">SOMOS BRONZA</h2>
                 <div className="space-y-6 text-text-main/80 leading-relaxed text-base whitespace-pre-line">
                   {ABOUT_TEXT}
                 </div>

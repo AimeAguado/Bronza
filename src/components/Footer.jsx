@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Instagram } from 'lucide-react';
+import { useCompraTranquila } from '../hooks/useCompraTranquila.js';
 
 const FOOTER_LINKS = [
   { to: '/', label: 'Shop the Drop' },
@@ -9,6 +10,7 @@ const FOOTER_LINKS = [
 ];
 
 function Footer() {
+  const { open: openCompraTranquila } = useCompraTranquila();
   return (
     <footer className="bg-primary text-background-light mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-16 grid gap-12 md:grid-cols-3">
@@ -27,19 +29,37 @@ function Footer() {
               {link.label}
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={openCompraTranquila}
+            className="text-left text-background-light/70 hover:text-accent transition-colors"
+          >
+            COMPRA TRANQUILA
+          </button>
         </nav>
 
         <div>
           <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent mb-4">Contacto</h2>
-          <a
-            href="https://wa.me/5491100000000?text=Hola!%20Quiero%20hacer%20una%20consulta"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-background-light/70 hover:text-accent transition-colors"
-          >
-            <MessageCircle size={16} />
-            WhatsApp
-          </a>
+          <div className="flex flex-col gap-3">
+            <a
+              href="https://wa.me/5491100000000?text=Hola!%20Quiero%20hacer%20una%20consulta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-background-light/70 hover:text-accent transition-colors"
+            >
+              <MessageCircle size={16} />
+              WhatsApp
+            </a>
+            <a
+              href="https://www.instagram.com/bronza.swim?utm_source=ig_web_button_share_sheet&vrfl=ZDNlZDc0MzIxNw=="
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-background-light/70 hover:text-accent transition-colors"
+            >
+              <Instagram size={16} />
+              Instagram
+            </a>
+          </div>
         </div>
       </div>
 
