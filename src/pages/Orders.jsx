@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
+import { useArrepentimiento } from '../hooks/useArrepentimiento.js'
 import { apiUrl } from '../lib/api.js'
 import { STATUS_LABELS, STATUS_STYLES } from '../lib/orderStatus.js'
 import Footer from '../components/Footer.jsx'
@@ -13,12 +14,20 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+const FOCUS =
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
+const NO_CANCEL_STATUSES = ['shipped', 'delivered', 'cancelled']
+
 export default function Orders() {
   const { token } = useAuth()
+  const { open: openArrepentimiento } = useArrepentimiento()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const fetchOrders = useCallback(() => {
+    if (!token) return
+    setLoading(true)
     fetch(apiUrl('/api/orders/my'), {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -27,6 +36,23 @@ export default function Orders() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [token])
+
+  useEffect(() => {
+    if (!token) {
+      setLoading(false)
+      setOrders([])
+      return
+    }
+    fetchOrders()
+  }, [token, fetchOrders])
+
+  useEffect(() => {
+    function onUpdated() {
+      fetchOrders()
+    }
+    window.addEventListener('orders-updated', onUpdated)
+    return () => window.removeEventListener('orders-updated', onUpdated)
+  }, [fetchOrders])
 
   return (
     <div className="min-h-screen bg-background-light pt-10 px-6 pb-10 text-text-main flex flex-col">
@@ -63,6 +89,17 @@ export default function Orders() {
                     </li>
                   ))}
                 </ul>
+                {!NO_CANCEL_STATUSES.includes(order.status) && (
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => openArrepentimiento(order)}
+                      className={`inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.25em] text-primary transition-colors hover:bg-primary hover:text-background-light ${FOCUS}`}
+                    >
+                      Botón de arrepentimiento
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

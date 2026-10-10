@@ -28,6 +28,27 @@ router.get('/my', requireAuth, async (req, res) => {
   }
 })
 
+router.post('/my/:id/withdrawal', requireAuth, async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user.id })
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada.' })
+    if (FULFILLMENT_STATUSES.includes(order.status)) {
+      return res
+        .status(400)
+        .json({ error: 'Este pedido ya fue enviado o finalizado y no puede cancelarse.' })
+    }
+    order.status = 'cancelled'
+    await order.save()
+    return res.json({ order })
+  } catch (e) {
+    if (e.name === 'CastError') {
+      return res.status(404).json({ error: 'Orden no encontrada.' })
+    }
+    console.error(e)
+    return res.status(500).json({ error: 'Error al cancelar el pedido.' })
+  }
+})
+
 router.patch('/confirm', requireAuth, async (req, res) => {
   try {
     const { externalReference, status } = req.body || {}

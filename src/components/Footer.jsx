@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MessageCircle, Instagram } from 'lucide-react';
 import { useCompraTranquila } from '../hooks/useCompraTranquila.js';
+import { useArrepentimiento } from '../hooks/useArrepentimiento.js';
 
 const FOOTER_LINKS = [
   { to: '/', label: 'Shop the Drop' },
@@ -11,6 +12,7 @@ const FOOTER_LINKS = [
 
 function Footer() {
   const { open: openCompraTranquila } = useCompraTranquila();
+  const { open: openArrepentimiento } = useArrepentimiento();
   return (
     <footer className="bg-primary text-background-light mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-16 grid gap-12 md:grid-cols-3">
@@ -35,6 +37,13 @@ function Footer() {
             className="text-left text-background-light/70 hover:text-accent transition-colors"
           >
             COMPRA TRANQUILA
+          </button>
+          <button
+            type="button"
+            onClick={() => openArrepentimiento(null)}
+            className="text-left text-background-light/70 hover:text-accent transition-colors"
+          >
+            BOTÓN DE ARREPENTIMIENTO
           </button>
         </nav>
 

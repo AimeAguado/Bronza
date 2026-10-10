@@ -16,6 +16,7 @@ import AdminRoute from './components/AdminRoute.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { AuthProvider } from './context/AuthProvider.jsx'
 import { CompraTranquilaProvider } from './context/CompraTranquilaProvider.jsx'
+import { ArrepentimientoProvider } from './context/ArrepentimientoProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')).render(
       <CartProvider>
         <AuthProvider>
           <CompraTranquilaProvider>
+            <ArrepentimientoProvider>
             <Routes>
               <Route path="/" element={<App />} />
               <Route path="/compra-tranquila" element={<CompraTranquila />} />
@@ -35,6 +37,7 @@ createRoot(document.getElementById('root')).render(
               <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
               <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
             </Routes>
+            </ArrepentimientoProvider>
           </CompraTranquilaProvider>
         </AuthProvider>
       </CartProvider>
