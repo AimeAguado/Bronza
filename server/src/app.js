@@ -7,6 +7,8 @@ import authRoutes from './routes/auth.js'
 import paymentsRoutes from './routes/payments.js'
 import productsRoutes from './routes/products.js'
 import ordersRoutes from './routes/orders.js'
+import cartsRoutes from './routes/carts.js'
+import cronRoutes from './routes/cron.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -26,6 +28,8 @@ export function createApp() {
   app.use('/api/payments', paymentsRoutes)
   app.use('/api/products', productsRoutes)
   app.use('/api/orders', ordersRoutes)
+  app.use('/api/cart', cartsRoutes)
+  app.use('/api/cron', cronRoutes)
 
   app.use((err, _req, res, _next) => {
     console.error(err)

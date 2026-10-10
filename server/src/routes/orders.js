@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { isValidObjectId } from 'mongoose'
 import { Order } from '../models/Order.js'
+import { Cart } from '../models/Cart.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
 
@@ -99,6 +100,15 @@ router.patch('/confirm', requireAuth, async (req, res) => {
     }
     order.status = status
     await order.save()
+
+    // Compra completada: cancelamos cualquier recordatorio pendiente.
+    if (status === 'approved' && order.cartToken) {
+      await Cart.updateOne(
+        { token: order.cartToken },
+        { $set: { status: 'completed', reminderSentAt: new Date() } },
+      ).catch((err) => console.error('[orders] no se pudo completar carrito:', err))
+    }
+
     return res.json({ order })
   } catch (e) {
     console.error(e)

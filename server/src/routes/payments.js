@@ -18,7 +18,7 @@ router.post('/preference', requireAuth, async (req, res) => {
     })
   }
 
-  const { items } = req.body || {}
+  const { items, cartToken } = req.body || {}
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Enviá al menos un ítem.' })
   }
@@ -118,6 +118,7 @@ router.post('/preference', requireAuth, async (req, res) => {
       status: 'pending',
       externalReference,
       preferenceId: result.id,
+      cartToken: typeof cartToken === 'string' ? cartToken : undefined,
     })
 
     return res.json({

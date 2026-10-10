@@ -29,6 +29,7 @@ const orderSchema = new Schema(
       default: 'pending',
     },
     externalReference: { type: String, index: true },
+    cartToken: { type: String, index: true },
     preferenceId: String,
     paymentId: String,
   },

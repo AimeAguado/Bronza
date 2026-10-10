@@ -21,8 +21,8 @@ import { ArrepentimientoProvider } from './context/ArrepentimientoProvider.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <CartProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <CartProvider>
           <CompraTranquilaProvider>
             <ArrepentimientoProvider>
             <Routes>
@@ -39,8 +39,8 @@ createRoot(document.getElementById('root')).render(
             </Routes>
             </ArrepentimientoProvider>
           </CompraTranquilaProvider>
-        </AuthProvider>
-      </CartProvider>
+        </CartProvider>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )

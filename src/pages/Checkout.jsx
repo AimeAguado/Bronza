@@ -69,7 +69,7 @@ function TransferRow({ label, value, copyable }) {
 
 const Checkout = () => {
   const navigate = useNavigate()
-  const { cart } = useCart()
+  const { cart, cartToken } = useCart()
   const { token } = useAuth()
 
   const [payUrl, setPayUrl] = useState('')
@@ -112,7 +112,7 @@ const Checkout = () => {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ items }),
+            body: JSON.stringify({ items, cartToken }),
           })
           const data = await res.json().catch(() => ({}))
           if (!cancelled && res.ok && data.init_point) {
@@ -139,7 +139,7 @@ const Checkout = () => {
     return () => {
       cancelled = true
     }
-  }, [token, cart])
+  }, [token, cart, cartToken])
 
   const lines = cart.map((item) => {
     const opts = [item.color, item.size].filter(Boolean).join(' / ')

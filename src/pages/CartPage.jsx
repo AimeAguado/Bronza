@@ -1,6 +1,8 @@
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useCart } from '../context/useCart.js'
+import { apiUrl } from '../lib/api.js'
 import Footer from '../components/Footer.jsx'
 
 function formatMoney(v) {
@@ -9,10 +11,70 @@ function formatMoney(v) {
 
 export default function CartPage() {
   const navigate = useNavigate()
-  const { cart, updateQty, removeFromCart } = useCart()
+  const { cart, setCart, updateQty, removeFromCart } = useCart()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [notice, setNotice] = useState('')
+  const handledRef = useRef(false)
 
   const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0)
   const itemCount = cart.reduce((acc, item) => acc + item.qty, 0)
+
+  // Recuperación desde el correo (?recover=…) y baja de recordatorios (?unsubscribe=…)
+  useEffect(() => {
+    if (handledRef.current) return
+    const recoverToken = searchParams.get('recover')
+    const unsubscribeToken = searchParams.get('unsubscribe')
+    if (!recoverToken && !unsubscribeToken) return
+    handledRef.current = true
+
+    const next = new URLSearchParams(searchParams)
+    next.delete('recover')
+    next.delete('unsubscribe')
+
+    async function run() {
+      if (unsubscribeToken) {
+        try {
+          await fetch(apiUrl('/api/cart/unsubscribe'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: unsubscribeToken }),
+          })
+        } catch {
+          /* ignorar */
+        }
+        setNotice('Listo, no te vamos a enviar más recordatorios. 💛')
+      } else if (recoverToken) {
+        try {
+          const res = await fetch(apiUrl(`/api/cart/recover/${recoverToken}`))
+          const data = await res.json().catch(() => ({}))
+          if (res.ok && Array.isArray(data.items) && data.items.length) {
+            setCart((prev) => {
+              const map = new Map(prev.map((item) => [item.id, { ...item }]))
+              for (const item of data.items) {
+                const found = map.get(item.id)
+                if (found) found.qty += item.qty
+                else map.set(item.id, { ...item, qty: item.qty })
+              }
+              return [...map.values()]
+            })
+            const removed = Array.isArray(data.removed) ? data.removed.length : 0
+            setNotice(
+              removed > 0
+                ? `Recuperamos tu carrito. ${removed} producto(s) ya no están disponibles. 🌊`
+                : 'Recuperamos tu carrito. ¡Seguí donde lo dejaste! 🌊',
+            )
+          } else {
+            setNotice('Tu carrito ya no tiene productos disponibles. 💛')
+          }
+        } catch {
+          setNotice('No pudimos recuperar tu carrito. 💛')
+        }
+      }
+      setSearchParams(next, { replace: true })
+    }
+
+    run()
+  }, [searchParams, setSearchParams, setCart])
 
   return (
     <div className="min-h-screen bg-background-light pt-10 px-6 pb-10 text-text-main flex flex-col">
@@ -35,6 +97,16 @@ export default function CartPage() {
             Seguir comprando
           </button>
         </div>
+
+        {notice && (
+          <div
+            role="status"
+            data-testid="cart-notice"
+            className="mt-6 rounded-xl border border-accent/40 bg-accent/10 px-5 py-4 text-sm text-text-main"
+          >
+            {notice}
+          </div>
+        )}
 
         {cart.length === 0 ? (
           <div className="mt-16 flex flex-col items-center text-center">
