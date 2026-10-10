@@ -13,18 +13,14 @@ describe("Carrito de compras", () => {
   });
 
   it("permite agregar un producto al carrito @smoke @regression", () => {
-    HomePage.inStockProductCards.first().within(() => {
-      cy.getByTestId("add-to-cart-button").click();
-    });
+    HomePage.addProductToCart(0);
 
-    HomePage.navCartIcon.click();
+    HomePage.goToCart();
     CartPage.cartItems.should("have.length.at.least", 1);
   });
 
   it("permite aumentar la cantidad de un producto @regression", () => {
-    HomePage.inStockProductCards.first().within(() => {
-      cy.getByTestId("add-to-cart-button").click();
-    });
+    HomePage.addProductToCart(0);
 
     CartPage.visit();
     CartPage.increaseQuantity(0);
@@ -36,9 +32,7 @@ describe("Carrito de compras", () => {
   });
 
   it("permite eliminar un producto del carrito @regression", () => {
-    HomePage.inStockProductCards.first().within(() => {
-      cy.getByTestId("add-to-cart-button").click();
-    });
+    HomePage.addProductToCart(0);
 
     CartPage.visit();
     CartPage.removeItemByIndex(0);
@@ -47,12 +41,8 @@ describe("Carrito de compras", () => {
   });
 
   it("actualiza el total al agregar más de un producto @regression", () => {
-    HomePage.inStockProductCards.eq(0).within(() => {
-      cy.getByTestId("add-to-cart-button").click();
-    });
-    HomePage.inStockProductCards.eq(1).within(() => {
-      cy.getByTestId("add-to-cart-button").click();
-    });
+    HomePage.addProductToCart(0);
+    HomePage.addProductToCart(1);
 
     CartPage.visit();
     CartPage.cartItems.should("have.length", 2);

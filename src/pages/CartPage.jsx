@@ -1,87 +1,147 @@
 import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useCart } from '../context/useCart.js'
 import Footer from '../components/Footer.jsx'
+
+function formatMoney(v) {
+  return `$${Number(v).toFixed(2)}`
+}
 
 export default function CartPage() {
   const navigate = useNavigate()
   const { cart, updateQty, removeFromCart } = useCart()
 
   const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0)
+  const itemCount = cart.reduce((acc, item) => acc + item.qty, 0)
 
   return (
     <div className="min-h-screen bg-background-light pt-10 px-6 pb-10 text-text-main flex flex-col">
-      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col justify-center pt-8 pb-16">
-        <h2 className="text-2xl font-black uppercase tracking-tighter">
-          Tu carrito
-        </h2>
-
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="mt-4 inline-flex w-full items-center justify-center rounded-xl border-2 border-text-main/20 bg-transparent px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-text-main transition-colors hover:border-primary hover:text-primary"
-        >
-          Seguir comprando
-        </button>
+      <div className="w-full max-w-5xl mx-auto flex-1 pt-8 pb-16">
+        <div className="flex items-end justify-between gap-4 border-b border-accent-muted/40 pb-6">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent-muted">
+              Bronza Club
+            </p>
+            <h1 className="mt-2 text-3xl md:text-4xl font-black uppercase tracking-tighter">
+              Tu carrito
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="hidden sm:inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:text-accent"
+          >
+            <ArrowLeft size={16} />
+            Seguir comprando
+          </button>
+        </div>
 
         {cart.length === 0 ? (
-          <p
-            data-testid="cart-empty-message"
-            className="mt-10 text-center text-sm text-text-main/50 uppercase tracking-widest font-bold"
-          >
-            Tu carrito está vacío
-          </p>
+          <div className="mt-16 flex flex-col items-center text-center">
+            <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-accent/20 text-primary">
+              <ShoppingBag size={26} aria-hidden="true" />
+            </span>
+            <p
+              data-testid="cart-empty-message"
+              className="mt-5 text-sm font-bold uppercase tracking-widest text-text-main/50"
+            >
+              Tu carrito está vacío
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-background-light transition-colors hover:bg-accent hover:text-primary"
+            >
+              Ver productos
+              <ArrowRight size={16} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              data-testid="cart-checkout-button"
+              disabled
+              onClick={() => navigate('/checkout')}
+              className="mt-3 w-full max-w-xs rounded-xl bg-primary py-4 text-xs font-bold uppercase tracking-widest text-background-light opacity-40 cursor-not-allowed"
+            >
+              Ir a checkout
+            </button>
+          </div>
         ) : (
-          <>
-            <ul className="mt-6 space-y-4">
+          <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
+            <ul className="space-y-4">
               {cart.map((item) => (
                 <li
                   key={item.id}
                   data-testid="cart-item"
-                  className="flex gap-4 border-b border-accent-muted/40 pb-4"
+                  className="flex gap-4 rounded-2xl border border-accent-muted/30 bg-white/60 p-4 shadow-sm transition-shadow hover:shadow-md sm:gap-5"
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-20 h-28 object-cover rounded-lg"
-                  />
-                  <div className="flex-grow">
-                    <div className="flex justify-between font-bold uppercase text-sm">
-                      <h4>{item.name}</h4>
-                      <p>${item.price * item.qty}</p>
-                    </div>
-                    {(item.color || item.size) && (
-                      <p className="text-[10px] uppercase tracking-wider text-text-main/50 mt-1">
-                        {item.color}{item.color && item.size ? ' / ' : ''}{item.size}
-                      </p>
+                  <div className="h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-accent-muted/20 sm:h-32 sm:w-28">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[9px] font-bold uppercase tracking-widest text-accent-muted">
+                        Sin imagen
+                      </div>
                     )}
-                    <div className="flex items-center gap-4 mt-3">
-                      <div className="flex items-center border border-accent-muted rounded px-2 gap-3">
+                  </div>
+
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className="truncate font-bold uppercase text-sm tracking-tight">
+                          {item.name}
+                        </h4>
+                        {(item.color || item.size) && (
+                          <p className="mt-1 text-[10px] uppercase tracking-wider text-text-main/50">
+                            {item.color}
+                            {item.color && item.size ? ' / ' : ''}
+                            {item.size}
+                          </p>
+                        )}
+                      </div>
+                      <p className="shrink-0 font-black text-sm">
+                        {formatMoney(item.price * item.qty)}
+                      </p>
+                    </div>
+
+                    <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+                      <div className="flex items-center rounded-full border border-accent-muted/50 bg-white">
                         <button
                           type="button"
                           data-testid="cart-item-decrease-button"
                           onClick={() => updateQty(item.id, -1)}
-                          className="cursor-pointer text-sm font-bold"
+                          aria-label="Restar una unidad"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-text-main/70 transition-colors hover:bg-accent/20 hover:text-primary"
                         >
-                          -
+                          <Minus size={14} aria-hidden="true" />
                         </button>
-                        <span data-testid="cart-item-quantity" className="font-bold text-sm">
+                        <span
+                          data-testid="cart-item-quantity"
+                          className="w-8 text-center text-sm font-bold"
+                        >
                           {item.qty}
                         </span>
                         <button
                           type="button"
                           data-testid="cart-item-increase-button"
                           onClick={() => updateQty(item.id, 1)}
-                          className="cursor-pointer text-sm font-bold"
+                          aria-label="Sumar una unidad"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-text-main/70 transition-colors hover:bg-accent/20 hover:text-primary"
                         >
-                          +
+                          <Plus size={14} aria-hidden="true" />
                         </button>
                       </div>
                       <button
                         type="button"
                         data-testid="cart-item-remove-button"
                         onClick={() => removeFromCart(item.id)}
-                        className="rounded-lg p-1.5 text-text-main/40 transition-colors hover:bg-accent/30 hover:text-primary"
+                        aria-label={`Eliminar ${item.name}`}
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-text-main/40 transition-colors hover:bg-accent/20 hover:text-primary"
                       >
+                        <Trash2 size={14} aria-hidden="true" />
                         Eliminar
                       </button>
                     </div>
@@ -90,35 +150,46 @@ export default function CartPage() {
               ))}
             </ul>
 
-            <div className="mt-8 pt-6 border-t border-accent-muted/40">
-              <div className="flex justify-between mb-6">
-                <span className="uppercase font-bold text-xs tracking-widest">Total</span>
+            <aside className="lg:sticky lg:top-24 rounded-2xl border border-accent-muted/30 bg-white/70 p-6 shadow-sm">
+              <h2 className="text-sm font-black uppercase tracking-widest">
+                Resumen
+              </h2>
+              <dl className="mt-5 space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-text-main/60">Productos</dt>
+                  <dd className="font-semibold">{itemCount}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-text-main/60">Envío</dt>
+                  <dd className="font-semibold">A coordinar</dd>
+                </div>
+              </dl>
+              <div className="mt-5 flex items-end justify-between border-t border-accent-muted/40 pt-5">
+                <span className="text-xs font-bold uppercase tracking-widest">
+                  Total
+                </span>
                 <span data-testid="cart-total" className="text-2xl font-black">
-                  ${total.toFixed(2)}
+                  {formatMoney(total)}
                 </span>
               </div>
               <button
                 type="button"
                 data-testid="cart-checkout-button"
                 onClick={() => navigate('/checkout')}
-                className="w-full bg-primary text-background-light py-5 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent hover:text-primary transition-all"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-xs font-bold uppercase tracking-widest text-background-light transition-all hover:bg-accent hover:text-primary"
               >
                 Ir a checkout
+                <ArrowRight size={16} aria-hidden="true" />
               </button>
-            </div>
-          </>
-        )}
-
-        {cart.length === 0 && (
-          <button
-            type="button"
-            data-testid="cart-checkout-button"
-            disabled
-            onClick={() => navigate('/checkout')}
-            className="mt-8 w-full bg-primary text-background-light py-5 rounded-xl font-bold uppercase tracking-widest text-xs opacity-40 cursor-not-allowed"
-          >
-            Ir a checkout
-          </button>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-text-main/15 py-3.5 text-xs font-bold uppercase tracking-widest text-text-main transition-colors hover:border-primary hover:text-primary sm:hidden"
+              >
+                Seguir comprando
+              </button>
+            </aside>
+          </div>
         )}
       </div>
       <Footer />

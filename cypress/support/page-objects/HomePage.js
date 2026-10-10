@@ -27,6 +27,23 @@ class HomePage {
   get navCartIcon() {
     return cy.getByTestId("nav-cart-icon");
   }
+
+  addProductToCart(index = 0) {
+    this.inStockProductCards.eq(index).within(() => {
+      cy.getByTestId("add-to-cart-button").click();
+    });
+    cy.getByTestId("color-option").first().click();
+    cy.get('[data-testid="size-option"]:not([disabled])').first().click();
+    cy.getByTestId("modal-add-to-cart-button").click();
+    cy.getByTestId("cart-drawer-close").click();
+    return this;
+  }
+
+  goToCart() {
+    this.navCartIcon.click();
+    cy.getByTestId("cart-drawer-view-cart").click();
+    return this;
+  }
 }
 
 export default new HomePage();

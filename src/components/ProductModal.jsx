@@ -25,20 +25,22 @@ function getColorHex(name) {
 }
 
 function ModalContent({ product, onClose, onAddToCart }) {
-  const [selectedColorIdx, setSelectedColorIdx] = useState(0)
+  const [selectedColorIdx, setSelectedColorIdx] = useState(null)
   const [selectedSize, setSelectedSize] = useState('')
   const [imgIdx, setImgIdx] = useState(0)
   const [showSizeChart, setShowSizeChart] = useState(false)
 
   const variants = product.variants ?? []
-  const currentVariant = variants[selectedColorIdx]
-  const images = currentVariant?.images ?? []
-  const colorName = currentVariant?.color ?? ''
+  const colorSelected = selectedColorIdx !== null
+  const activeVariant = variants[colorSelected ? selectedColorIdx : 0]
+  const images = activeVariant?.images ?? []
+  const colorName = colorSelected ? activeVariant?.color ?? '' : ''
   const sizes = product.sizes ?? []
 
-  const sizeStock = currentVariant?.stock ?? {}
+  const sizeStock = activeVariant?.stock ?? {}
   const isSizeAvailable = (size) => (sizeStock[size] ?? 0) > 0
   const inStock = hasStock(product)
+  const colorOk = variants.length === 0 || colorSelected
 
   function prevImage() {
     setImgIdx(i => (i - 1 + images.length) % images.length)
@@ -49,7 +51,7 @@ function ModalContent({ product, onClose, onAddToCart }) {
   }
 
   function handleAdd() {
-    if (!selectedSize || !inStock) return
+    if (!colorOk || !selectedSize || !inStock) return
     onAddToCart({
       id: `${product._id}-${colorName}-${selectedSize}`,
       productId: product._id,
@@ -133,12 +135,15 @@ function ModalContent({ product, onClose, onAddToCart }) {
         {variants.length > 0 && (
           <div className="mb-6">
             <h4 className="text-xs font-bold uppercase tracking-widest mb-3">
-              Color: <span className="text-text-main/60">{colorName}</span>
+              Color: {colorSelected
+                ? <span className="text-text-main/60">{colorName}</span>
+                : <span className="text-primary font-bold">* Seleccioná un color</span>}
             </h4>
             <div className="flex gap-3">
               {variants.map((v, idx) => (
                 <button
                   key={v.color}
+                  data-testid="color-option"
                   onClick={() => { setSelectedColorIdx(idx); setSelectedSize(''); setImgIdx(0) }}
                   className={`w-8 h-8 rounded-full border-2 transition-all ${idx === selectedColorIdx ? 'border-primary scale-110' : 'border-accent-muted/40 hover:border-text-main/40'}`}
                   style={{ backgroundColor: getColorHex(v.color) }}
@@ -170,6 +175,7 @@ function ModalContent({ product, onClose, onAddToCart }) {
                 return (
                   <button
                     key={size}
+                    data-testid="size-option"
                     disabled={!available}
                     onClick={() => setSelectedSize(size)}
                     className={`min-w-[44px] py-2.5 px-4 rounded-lg text-sm font-bold uppercase transition-all
@@ -189,16 +195,23 @@ function ModalContent({ product, onClose, onAddToCart }) {
         )}
 
         <button
+          data-testid="modal-add-to-cart-button"
           onClick={handleAdd}
-          disabled={!selectedSize || !inStock}
+          disabled={!colorOk || !selectedSize || !inStock}
           className={`mt-auto w-full py-4 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all
-            ${selectedSize && inStock
+            ${colorOk && selectedSize && inStock
               ? 'bg-primary text-background-light hover:bg-accent hover:text-primary'
               : 'bg-accent-muted/30 text-accent-muted/60 cursor-not-allowed'
             }`}
         >
           <ShoppingBag size={16} />
-          {!inStock ? 'Sin stock' : selectedSize ? 'Agregar al carrito' : 'Seleccioná un talle'}
+          {!inStock
+            ? 'Sin stock'
+            : !colorOk
+              ? 'Seleccioná un color'
+              : !selectedSize
+                ? 'Seleccioná un talle'
+                : 'Agregar al carrito'}
         </button>        {/* SIZE CHART MODAL */}
         {showSizeChart && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Tabla de talles">

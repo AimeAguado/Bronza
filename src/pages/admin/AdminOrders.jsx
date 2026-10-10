@@ -193,9 +193,18 @@ export default function AdminOrders() {
                       <p className="text-xs text-text-main/50">{order.userId?.email ?? ''}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <ul className="space-y-0.5">
+                      <ul className="space-y-1.5">
                         {order.items.map((item, i) => (
-                          <li key={i} className="text-xs">{item.title} x{item.quantity}</li>
+                          <li key={i} className="flex items-center gap-2 text-xs">
+                            {item.image ? (
+                              <img src={item.image} alt={item.title} className="h-9 w-8 shrink-0 rounded object-cover" />
+                            ) : (
+                              <span className="flex h-9 w-8 shrink-0 items-center justify-center rounded bg-accent-muted/20 text-[8px] font-bold uppercase text-accent-muted">
+                                —
+                              </span>
+                            )}
+                            <span className="min-w-0 truncate">{item.title} <span className="text-text-main/50">x{item.quantity}</span></span>
+                          </li>
                         ))}
                       </ul>
                     </td>

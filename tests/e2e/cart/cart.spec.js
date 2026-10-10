@@ -17,8 +17,8 @@ test.describe("Carrito de compras", () => {
 
   test("permite agregar un producto al carrito", async ({ page }) => {
     const home = new HomePage(page);
-    await home.inStockProductCards.first().getByTestId("add-to-cart-button").click();
-    await home.navCartIcon.click();
+    await home.addProductToCart(0);
+    await home.goToCart();
 
     const cart = new CartPage(page);
     await expect(cart.cartItems).toHaveCount(1);
@@ -26,7 +26,7 @@ test.describe("Carrito de compras", () => {
 
   test("permite aumentar la cantidad de un producto", async ({ page }) => {
     const home = new HomePage(page);
-    await home.inStockProductCards.first().getByTestId("add-to-cart-button").click();
+    await home.addProductToCart(0);
 
     const cart = new CartPage(page);
     await cart.visit();
@@ -37,7 +37,7 @@ test.describe("Carrito de compras", () => {
 
   test("permite eliminar un producto del carrito", async ({ page }) => {
     const home = new HomePage(page);
-    await home.inStockProductCards.first().getByTestId("add-to-cart-button").click();
+    await home.addProductToCart(0);
 
     const cart = new CartPage(page);
     await cart.visit();
@@ -48,8 +48,8 @@ test.describe("Carrito de compras", () => {
 
   test("actualiza el total al agregar más de un producto", async ({ page }) => {
     const home = new HomePage(page);
-    await home.inStockProductCards.nth(0).getByTestId("add-to-cart-button").click();
-    await home.inStockProductCards.nth(1).getByTestId("add-to-cart-button").click();
+    await home.addProductToCart(0);
+    await home.addProductToCart(1);
 
     const cart = new CartPage(page);
     await cart.visit();

@@ -24,6 +24,7 @@ router.post('/preference', requireAuth, async (req, res) => {
   }
 
   const mpItems = []
+  const orderItems = []
   for (const raw of items) {
     const title =
       typeof raw.title === 'string' ? raw.title.trim() : ''
@@ -36,12 +37,22 @@ router.post('/preference', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Precio unitario inválido.' })
     }
     unit_price = Math.round(unit_price * 100) / 100
+    const id = String(raw.id ?? title)
     mpItems.push({
-      id: String(raw.id ?? title),
+      id,
       title,
       quantity: Math.floor(quantity),
       unit_price,
       currency_id: 'ARS',
+    })
+    orderItems.push({
+      id,
+      title,
+      quantity: Math.floor(quantity),
+      unit_price,
+      image: typeof raw.image === 'string' ? raw.image : '',
+      color: typeof raw.color === 'string' ? raw.color : '',
+      size: typeof raw.size === 'string' ? raw.size : '',
     })
   }
 
@@ -102,7 +113,7 @@ router.post('/preference', requireAuth, async (req, res) => {
     const total = mpItems.reduce((acc, i) => acc + i.unit_price * i.quantity, 0)
     await Order.create({
       userId: req.user.id,
-      items: mpItems.map((i) => ({ id: i.id, title: i.title, quantity: i.quantity, unit_price: i.unit_price })),
+      items: orderItems,
       total,
       status: 'pending',
       externalReference,

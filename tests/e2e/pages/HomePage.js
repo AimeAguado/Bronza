@@ -15,4 +15,25 @@ export default class HomePage {
     await this.page.goto("/");
     return this;
   }
+
+  async addProductToCart(index = 0) {
+    await this.inStockProductCards
+      .nth(index)
+      .getByTestId("add-to-cart-button")
+      .click();
+    await this.page.getByTestId("color-option").first().click();
+    await this.page
+      .locator('[data-testid="size-option"]:not([disabled])')
+      .first()
+      .click();
+    await this.page.getByTestId("modal-add-to-cart-button").click();
+    await this.page.getByTestId("cart-drawer-close").click();
+    return this;
+  }
+
+  async goToCart() {
+    await this.navCartIcon.click();
+    await this.page.getByTestId("cart-drawer-view-cart").click();
+    return this;
+  }
 }

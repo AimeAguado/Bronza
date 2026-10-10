@@ -27,10 +27,8 @@ describe("Checkout - Integración MercadoPago", () => {
     cy.resetAppState();
     cy.loginViaApi(users.existingUser.email, users.existingUser.password);
     HomePage.visit();
-    HomePage.inStockProductCards.first().within(() => {
-      cy.getByTestId("add-to-cart-button").click();
-    });
-    HomePage.navCartIcon.click();
+    HomePage.addProductToCart(0);
+    HomePage.goToCart();
   });
 
   it("redirige al usuario al checkout de MercadoPago al confirmar la compra @smoke @regression", () => {

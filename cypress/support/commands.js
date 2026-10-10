@@ -60,6 +60,10 @@ Cypress.Commands.add("addProductToCartByName", (productName) => {
     .within(() => {
       cy.getByTestId("add-to-cart-button").click();
     });
+  cy.getByTestId("color-option").first().click();
+  cy.get('[data-testid="size-option"]:not([disabled])').first().click();
+  cy.getByTestId("modal-add-to-cart-button").click();
+  cy.getByTestId("cart-drawer-close").click();
 });
 
 /**
