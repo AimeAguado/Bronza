@@ -44,6 +44,7 @@ export default function CartPage() {
         }
         setNotice('Listo, no te vamos a enviar más recordatorios. 💛')
       } else if (recoverToken) {
+        setNotice('Un segundo, estamos recuperando tu carrito… 🌊')
         try {
           const res = await fetch(apiUrl(`/api/cart/recover/${recoverToken}`))
           const data = await res.json().catch(() => ({}))
