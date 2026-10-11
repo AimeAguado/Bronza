@@ -44,7 +44,7 @@ export default function CartPage() {
         }
         setNotice('Listo, no te vamos a enviar más recordatorios. 💛')
       } else if (recoverToken) {
-        setNotice('Un segundo, estamos recuperando tu carrito… 🌊')
+        setNotice('Recuperamos tu carrito. ¡Seguí donde lo dejaste! 🌊')
         try {
           const res = await fetch(apiUrl(`/api/cart/recover/${recoverToken}`))
           const data = await res.json().catch(() => ({}))
@@ -59,11 +59,11 @@ export default function CartPage() {
               return [...map.values()]
             })
             const removed = Array.isArray(data.removed) ? data.removed.length : 0
-            setNotice(
-              removed > 0
-                ? `Recuperamos tu carrito. ${removed} producto(s) ya no están disponibles. 🌊`
-                : 'Recuperamos tu carrito. ¡Seguí donde lo dejaste! 🌊',
-            )
+            if (removed > 0) {
+              setNotice(
+                `Recuperamos tu carrito. ${removed} producto(s) ya no están disponibles. 🌊`,
+              )
+            }
           } else {
             setNotice('Tu carrito ya no tiene productos disponibles. 💛')
           }
