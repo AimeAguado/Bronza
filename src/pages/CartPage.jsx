@@ -52,8 +52,8 @@ export default function CartPage() {
               const map = new Map(prev.map((item) => [item.id, { ...item }]))
               for (const item of data.items) {
                 const found = map.get(item.id)
-                if (found) found.qty += item.qty
-                else map.set(item.id, { ...item, qty: item.qty })
+                if (!found) map.set(item.id, { ...item, qty: item.qty })
+                else if (item.qty > found.qty) found.qty = item.qty
               }
               return [...map.values()]
             })
