@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { isValidObjectId } from 'mongoose'
 import { Order } from '../models/Order.js'
 import { Cart } from '../models/Cart.js'
+import { PendingCheckout } from '../models/PendingCheckout.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
 import { sendOrderConfirmationEmail } from '../lib/email.js'
@@ -169,20 +170,54 @@ router.patch('/confirm', requireAuth, async (req, res) => {
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Status inválido.' })
     }
-    const order = await Order.findOne({ externalReference, userId: req.user.id })
-    if (!order) return res.status(404).json({ error: 'Orden no encontrada.' })
-    if (FULFILLMENT_STATUSES.includes(order.status)) {
-      return res.json({ order })
+
+    // Idempotencia: si la orden ya se creó, la devolvemos sin reenviar el correo.
+    const existing = await Order.findOne({
+      externalReference,
+      userId: req.user.id,
+    })
+    if (existing) return res.json({ order: existing })
+
+    const pending = await PendingCheckout.findOne({
+      externalReference,
+      userId: req.user.id,
+    })
+    if (!pending) return res.status(404).json({ error: 'Orden no encontrada.' })
+
+    // Pago no aprobado: no registramos pedido, descartamos el borrador.
+    if (status !== 'approved') {
+      await pending.deleteOne()
+      return res.json({ order: null, status })
     }
-    order.status = status
+
+    const order = await Order.create({
+      userId: req.user.id,
+      items: pending.items,
+      total: pending.total,
+      status: 'approved',
+      paymentMethod: 'mercadopago',
+      externalReference,
+      preferenceId: pending.preferenceId,
+      cartToken: pending.cartToken,
+    })
+    order.number = orderNumberFromId(order._id)
     await order.save()
 
-    // Compra completada: cancelamos cualquier recordatorio pendiente.
-    if (status === 'approved' && order.cartToken) {
+    if (order.cartToken) {
       await Cart.updateOne(
         { token: order.cartToken },
         { $set: { status: 'completed', reminderSentAt: new Date() } },
       ).catch((err) => console.error('[orders] no se pudo completar carrito:', err))
+    }
+
+    await pending.deleteOne()
+
+    const mail = await sendOrderConfirmationEmail({
+      to: req.user.email,
+      order,
+    }).catch((err) => ({ ok: false, error: err?.message }))
+    if (!mail.ok && !mail.skipped) {
+      console.error('[orders] no se pudo enviar el correo de confirmación:', mail.error)
     }
 
     return res.json({ order })

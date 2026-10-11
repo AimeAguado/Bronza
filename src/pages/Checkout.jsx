@@ -27,6 +27,8 @@ const TRANSFER_DATA = {
   alias: 'Bronza.swim',
 }
 
+const BRONZA_WHATSAPP = '5491100000000'
+
 function formatMoney(value) {
   return `$${Number(value).toFixed(2)}`
 }
@@ -154,7 +156,13 @@ const Checkout = () => {
     formatMoney(total)
 
   const whatsappUrl =
-    'https://wa.me/549XXXXXXXXX?text=' + encodeURIComponent(supportMessage)
+    `https://wa.me/${BRONZA_WHATSAPP}?text=` + encodeURIComponent(supportMessage)
+
+  const proofWhatsappUrl =
+    `https://wa.me/${BRONZA_WHATSAPP}?text=` +
+    encodeURIComponent(
+      'Ya hice el pago de mi pedido. Les envío el comprobante.',
+    )
 
   async function confirmTransferOrder() {
     if (confirming || !cart.length || !token) return
@@ -568,6 +576,24 @@ const Checkout = () => {
             <p className="mt-3 text-sm font-semibold text-primary">
               Gracias por ser parte de Bronza. ✨
             </p>
+
+            {method === 'transfer' && (
+              <div className="mt-5 rounded-xl border border-accent-muted/40 bg-white/70 p-4">
+                <p className="text-sm font-semibold text-text-main">
+                  Compartinos tu comprobante por WhatsApp
+                </p>
+                <a
+                  href={proofWhatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="checkout-whatsapp-proof-button"
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#25d366] px-6 py-3.5 font-bold text-xs uppercase tracking-widest text-[#291e08] transition-colors hover:brightness-105"
+                >
+                  <MessageCircle size={16} aria-hidden="true" />
+                  Enviar comprobante
+                </a>
+              </div>
+            )}
 
             <div className="mt-6 space-y-3">
               <button

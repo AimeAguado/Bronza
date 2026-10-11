@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 import { requireAuth } from '../middleware/requireAuth.js'
-import { Order } from '../models/Order.js'
+import { PendingCheckout } from '../models/PendingCheckout.js'
 
 const router = Router()
 
@@ -111,11 +111,12 @@ router.post('/preference', requireAuth, async (req, res) => {
     }
 
     const total = mpItems.reduce((acc, i) => acc + i.unit_price * i.quantity, 0)
-    await Order.create({
+    // Guardamos un borrador (no un pedido): recién al aprobarse el pago se
+    // crea la orden definitiva en /api/orders/confirm.
+    await PendingCheckout.create({
       userId: req.user.id,
       items: orderItems,
       total,
-      status: 'pending',
       externalReference,
       preferenceId: result.id,
       cartToken: typeof cartToken === 'string' ? cartToken : undefined,
