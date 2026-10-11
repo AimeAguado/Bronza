@@ -4,8 +4,37 @@ import { Order } from '../models/Order.js'
 import { Cart } from '../models/Cart.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
+import { sendOrderConfirmationEmail } from '../lib/email.js'
 
 const router = Router()
+
+function orderNumberFromId(id) {
+  return String(id).slice(-6).toUpperCase()
+}
+
+function sanitizeOrderItems(rawItems) {
+  if (!Array.isArray(rawItems)) return null
+  const items = []
+  for (const raw of rawItems) {
+    if (!raw || typeof raw !== 'object') continue
+    const title = typeof raw.title === 'string' ? raw.title.trim() : ''
+    const quantity = Number(raw.quantity)
+    let unit_price = Number(raw.unit_price)
+    if (!title || !Number.isFinite(quantity) || quantity < 1) continue
+    if (!Number.isFinite(unit_price) || unit_price <= 0) continue
+    unit_price = Math.round(unit_price * 100) / 100
+    items.push({
+      id: String(raw.id ?? title),
+      title,
+      quantity: Math.floor(quantity),
+      unit_price,
+      image: typeof raw.image === 'string' ? raw.image : '',
+      color: typeof raw.color === 'string' ? raw.color : '',
+      size: typeof raw.size === 'string' ? raw.size : '',
+    })
+  }
+  return items
+}
 
 const VALID_STATUSES = [
   'pending',
@@ -28,6 +57,53 @@ router.get('/my', requireAuth, async (req, res) => {
   } catch (e) {
     console.error(e)
     return res.status(500).json({ error: 'Error al obtener pedidos.' })
+  }
+})
+
+/**
+ * Confirma un pedido pagado por transferencia bancaria.
+ * Crea la orden, marca el carrito como completado (frena recordatorios) y
+ * envía el correo de confirmación con el resumen.
+ */
+router.post('/transfer', requireAuth, async (req, res) => {
+  try {
+    const { items: rawItems, cartToken } = req.body || {}
+    const items = sanitizeOrderItems(rawItems)
+    if (!items || items.length === 0) {
+      return res.status(400).json({ error: 'Enviá al menos un ítem.' })
+    }
+    const total = items.reduce((acc, i) => acc + i.unit_price * i.quantity, 0)
+
+    const order = await Order.create({
+      userId: req.user.id,
+      items,
+      total,
+      status: 'waiting_payment',
+      paymentMethod: 'transfer',
+      cartToken: typeof cartToken === 'string' ? cartToken : undefined,
+    })
+    order.number = orderNumberFromId(order._id)
+    await order.save()
+
+    if (order.cartToken) {
+      await Cart.updateOne(
+        { token: order.cartToken },
+        { $set: { status: 'completed', reminderSentAt: new Date() } },
+      ).catch((err) => console.error('[orders] no se pudo completar carrito:', err))
+    }
+
+    const mail = await sendOrderConfirmationEmail({
+      to: req.user.email,
+      order,
+    }).catch((err) => ({ ok: false, error: err?.message }))
+    if (!mail.ok && !mail.skipped) {
+      console.error('[orders] no se pudo enviar el correo de confirmación:', mail.error)
+    }
+
+    return res.status(201).json({ order })
+  } catch (e) {
+    console.error(e)
+    return res.status(500).json({ error: 'No se pudo confirmar el pedido.' })
   }
 })
 

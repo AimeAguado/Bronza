@@ -30,6 +30,13 @@ const orderSchema = new Schema(
     },
     externalReference: { type: String, index: true },
     cartToken: { type: String, index: true },
+    number: { type: String, index: true },
+    paymentMethod: {
+      type: String,
+      enum: ['mercadopago', 'transfer'],
+      default: 'mercadopago',
+    },
+    delivery: { type: String, default: 'A coordinar' },
     preferenceId: String,
     paymentId: String,
   },

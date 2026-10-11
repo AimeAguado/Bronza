@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { renderAbandonedCartEmail } from './emailTemplates/abandonedCart.js'
+import { renderOrderConfirmationEmail } from './emailTemplates/orderConfirmation.js'
 
 let client = null
 
@@ -43,6 +44,44 @@ export async function sendAbandonedCartEmail({
     recoveryUrl,
     unsubscribeUrl,
   })
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from,
+      to,
+      subject,
+      html,
+      text,
+      ...(replyTo ? { replyTo } : {}),
+    })
+    if (error) {
+      return { ok: false, error: error.message || String(error) }
+    }
+    return { ok: true, id: data?.id ?? null }
+  } catch (e) {
+    return { ok: false, error: e?.message || String(e) }
+  }
+}
+
+/**
+ * Envía el correo de confirmación de compra.
+ * Nunca lanza: devuelve { ok } para poder registrar errores sin romper el flujo.
+ */
+export async function sendOrderConfirmationEmail({ to, order }) {
+  if (!to) {
+    return { ok: false, skipped: true, reason: 'Sin email de destino.' }
+  }
+
+  const resend = getClient()
+  if (!resend) {
+    return { ok: false, skipped: true, reason: 'RESEND_API_KEY no configurada.' }
+  }
+
+  const from =
+    process.env.EMAIL_FROM?.trim() || 'Bronza <onboarding@resend.dev>'
+  const replyTo = process.env.EMAIL_REPLY_TO?.trim() || undefined
+
+  const { subject, html, text } = renderOrderConfirmationEmail({ order })
 
   try {
     const { data, error } = await resend.emails.send({
