@@ -1,25 +1,32 @@
 /**
- * Plantilla del recordatorio de carrito abandonado.
- * Tablas + estilos inline para máxima compatibilidad con los clientes de correo.
- * Identidad Bronza: fondo marrón #291E0C, nude rosado #9C8580, rosa #DE8BBD.
+ * Plantilla del recordatorio de carrito abandonado — estética Bronza.
+ * Fondo marrón profundo cálido, tipografía serif, hairlines, mucho aire y
+ * acentos blush. Tablas + estilos inline para compatibilidad con clientes de correo.
  */
 
-const COLORS = {
-  bg: '#291E0C',
-  card: '#33260F',
-  border: '#4A3A1E',
-  nude: '#9C8580',
-  cream: '#F3E9DC',
+const C = {
+  bg: '#1C1408',
+  panel: '#251A0C',
+  hair: '#362814',
+  brown: '#291E08',
+  nude: '#A99A8B',
+  soft: '#CFC5B8',
+  cream: '#F4EDE2',
   pink: '#DE8BBD',
-  dark: '#291E0C',
 }
 
-function formatMoney(value) {
+const LOGO_URL =
+  'https://res.cloudinary.com/dhkhgloxn/image/upload/c_crop,x_140,y_504,w_758,h_68/c_scale,w_440,q_auto,f_jpg/v1791660457/bronza/email/logo-bronza.jpg'
+
+const SERIF = "Georgia,'Times New Roman',serif"
+const SANS = "'Helvetica Neue',Helvetica,Arial,sans-serif"
+
+function money(value) {
   const n = Number(value) || 0
   return `$${n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function escapeHtml(value) {
+function esc(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -28,30 +35,32 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
-function optionsText(item) {
+function opts(item) {
   return [item.color, item.size].filter(Boolean).join(' / ')
 }
 
-function renderItem(item) {
-  const image = typeof item.image === 'string' && item.image.trim()
-    ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" width="80" height="100" style="display:block;width:80px;height:100px;object-fit:cover;border-radius:10px;background:${COLORS.border};" />`
-    : `<div style="width:80px;height:100px;border-radius:10px;background:${COLORS.border};color:${COLORS.nude};font-family:Arial,sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:100px;">Sin foto</div>`
+function renderItemRows(item) {
+  const image =
+    typeof item.image === 'string' && item.image.trim()
+      ? `<img src="${esc(item.image)}" alt="${esc(item.name)}" width="72" height="90" style="display:block;width:72px;height:90px;object-fit:cover;border-radius:8px;background:${C.hair};" />`
+      : `<div style="width:72px;height:90px;border-radius:8px;background:${C.panel};color:${C.nude};font-family:${SANS};font-size:8px;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:90px;">Sin foto</div>`
 
-  const opts = optionsText(item)
+  const options = opts(item)
 
   return `
     <tr>
-      <td style="padding:12px 0;border-bottom:1px solid ${COLORS.border};" valign="top" width="80">
-        ${image}
+      <td width="72" valign="middle" style="padding:18px 0;">${image}</td>
+      <td valign="middle" style="padding:18px 8px 18px 16px;">
+        <p style="margin:0;font-family:${SANS};font-size:13px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:${C.cream};">${esc(item.name)}</p>
+        ${options ? `<p style="margin:6px 0 0;font-family:${SANS};font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:${C.nude};">${esc(options)}</p>` : ''}
+        <p style="margin:6px 0 0;font-family:${SANS};font-size:11px;color:${C.nude};">Cantidad: ${esc(item.qty)}</p>
       </td>
-      <td style="padding:12px 0 12px 16px;border-bottom:1px solid ${COLORS.border};" valign="middle">
-        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;color:${COLORS.cream};">${escapeHtml(item.name)}</p>
-        ${opts ? `<p style="margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:${COLORS.nude};">${escapeHtml(opts)}</p>` : ''}
-        <p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${COLORS.nude};">Cantidad: ${escapeHtml(item.qty)}</p>
+      <td valign="middle" align="right" style="padding:18px 0;">
+        <p style="margin:0;font-family:${SERIF};font-size:16px;color:${C.pink};">${money(Number(item.price) * Number(item.qty))}</p>
       </td>
-      <td style="padding:12px 0;border-bottom:1px solid ${COLORS.border};text-align:right;" valign="middle">
-        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:${COLORS.pink};">${formatMoney(Number(item.price) * Number(item.qty))}</p>
-      </td>
+    </tr>
+    <tr>
+      <td colspan="3" style="border-bottom:1px solid ${C.hair};font-size:0;line-height:0;">&nbsp;</td>
     </tr>`
 }
 
@@ -61,8 +70,11 @@ export function renderAbandonedCartEmail({ cart, recoveryUrl, unsubscribeUrl }) 
     (acc, item) => acc + Number(item.price || 0) * Number(item.qty || 0),
     0,
   )
+  const count = items.reduce((acc, item) => acc + Number(item.qty || 0), 0)
 
   const subject = '🤎 ¡Te quedaron unas bikinis esperándote!'
+  const preheader =
+    'Tu verano te está esperando. Volvé a tu carrito y completá tu compra.'
 
   const html = `<!doctype html>
 <html lang="es">
@@ -70,73 +82,119 @@ export function renderAbandonedCartEmail({ cart, recoveryUrl, unsubscribeUrl }) 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
-    <title>${escapeHtml(subject)}</title>
+    <meta name="supported-color-schemes" content="dark light" />
+    <title>${esc(subject)}</title>
     <style>
-      @media (max-width: 600px) {
+      @media (max-width: 620px) {
         .container { width: 100% !important; }
-        .px { padding-left: 20px !important; padding-right: 20px !important; }
+        .px { padding-left: 26px !important; padding-right: 26px !important; }
+        .hero-title { font-size: 26px !important; }
         .btn a { display: block !important; }
       }
     </style>
   </head>
-  <body style="margin:0;padding:0;background-color:${COLORS.bg};">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.bg};">
+  <body style="margin:0;padding:0;background-color:${C.bg};">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${C.bg};">
       <tr>
-        <td align="center" style="padding:28px 12px;">
-          <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;">
+        <td align="center" style="padding:0;">
+          <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background-color:${C.bg};">
+
+            <!-- Logo -->
             <tr>
-              <td align="center" style="padding-bottom:20px;">
-                <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;letter-spacing:8px;text-transform:uppercase;color:${COLORS.cream};">Bronza</p>
-                <p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${COLORS.pink};">Bronzate · Brilla · Viví</p>
+              <td class="px" align="center" style="padding:46px 40px 0;">
+                <img src="${LOGO_URL}" alt="Bronza" width="150" style="display:block;width:150px;max-width:52%;height:auto;margin:0 auto;" />
+                <p style="margin:16px 0 0;font-family:${SANS};font-size:9px;letter-spacing:6px;text-transform:uppercase;color:${C.nude};">Temporada 2027</p>
               </td>
             </tr>
 
+            <!-- Hairline rosa -->
             <tr>
-              <td class="px" style="background-color:${COLORS.card};border:1px solid ${COLORS.border};border-radius:18px;padding:36px 40px;">
-                <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.3;color:${COLORS.cream};">¡Hola, reina! ☀️</h1>
-                <p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:${COLORS.nude};">
+              <td align="center" style="padding:30px 0 0;">
+                <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                  <td width="34" height="1" style="background-color:${C.pink};font-size:0;line-height:0;">&nbsp;</td>
+                </tr></table>
+              </td>
+            </tr>
+
+            <!-- Hero -->
+            <tr>
+              <td class="px" align="center" style="padding:26px 40px 0;">
+                <h1 class="hero-title" style="margin:0;font-family:${SERIF};font-size:30px;line-height:1.24;font-weight:normal;color:${C.cream};">
+                  ¡Te quedó algo<br />lindo por acá!
+                </h1>
+                <p style="margin:18px 0 0;font-family:${SANS};font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${C.nude};">Tu verano te está esperando</p>
+              </td>
+            </tr>
+
+            <!-- Mensaje -->
+            <tr>
+              <td class="px" style="padding:40px 40px 0;">
+                <p style="margin:0;font-family:${SERIF};font-size:20px;color:${C.cream};">Hola, reina 🤎</p>
+                <p style="margin:16px 0 0;font-family:${SANS};font-size:14px;line-height:1.85;color:${C.soft};">
                   Vimos que dejaste algunas de tus bikinis favoritas en el carrito y no queremos que te quedes sin ellas.
                 </p>
-                <p style="margin:14px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:${COLORS.nude};">
+                <p style="margin:12px 0 0;font-family:${SANS};font-size:14px;line-height:1.85;color:${C.soft};">
                   Tu próximo look de verano está a un pasito de ser tuyo. 🌊
                 </p>
+              </td>
+            </tr>
 
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
-                  ${items.map(renderItem).join('')}
+            <!-- Productos -->
+            <tr>
+              <td class="px" style="padding:36px 40px 0;">
+                <p style="margin:0 0 2px;font-family:${SANS};font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${C.nude};">
+                  Tu selección · ${esc(count)} ${count === 1 ? 'prenda' : 'prendas'}
+                </p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  ${items.map(renderItemRows).join('')}
                   <tr>
-                    <td style="padding-top:18px;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${COLORS.nude};">Total</td>
+                    <td style="padding:18px 0 0;font-family:${SANS};font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${C.nude};">Total</td>
                     <td></td>
-                    <td style="padding-top:18px;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:${COLORS.cream};">${formatMoney(total)}</td>
+                    <td align="right" style="padding:14px 0 0;font-family:${SERIF};font-size:24px;color:${C.cream};">${money(total)}</td>
                   </tr>
                 </table>
+              </td>
+            </tr>
 
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:30px;">
+            <!-- CTA -->
+            <tr>
+              <td class="px" align="center" style="padding:40px 40px 0;">
+                <p style="margin:0 0 8px;font-family:${SERIF};font-size:20px;color:${C.cream};">Tu verano te está esperando</p>
+                <p style="margin:0 0 26px;font-family:${SANS};font-size:13px;line-height:1.7;color:${C.nude};">Volvé a tu carrito y completá tu compra.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" align="center" class="btn">
                   <tr>
-                    <td align="center" class="btn">
-                      <a href="${escapeHtml(recoveryUrl)}" style="display:inline-block;background-color:${COLORS.pink};color:${COLORS.dark};font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;text-decoration:none;padding:16px 40px;border-radius:999px;">
+                    <td align="center" style="background-color:${C.pink};border-radius:999px;">
+                      <a href="${esc(recoveryUrl)}" style="display:inline-block;padding:16px 44px;font-family:${SANS};font-size:12px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;color:${C.brown};text-decoration:none;">
                         Volver a mi carrito
                       </a>
                     </td>
                   </tr>
                 </table>
-
-                <p style="margin:28px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.7;color:${COLORS.nude};">
-                  Con amor, Bronza 🤎<br />
-                  <span style="color:${COLORS.cream};">Bronzate. Brilla. Viví.</span>
-                </p>
               </td>
             </tr>
 
+            <!-- Despedida -->
             <tr>
-              <td align="center" style="padding:22px 20px 0;">
-                <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:${COLORS.nude};">
-                  Recibís este correo porque tenías productos pendientes en tu carrito de Bronza.
-                </p>
-                <p style="margin:8px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:${COLORS.nude};">
-                  <a href="${escapeHtml(unsubscribeUrl)}" style="color:${COLORS.pink};text-decoration:underline;">No quiero recibir más recordatorios</a>
+              <td class="px" align="center" style="padding:44px 40px 0;">
+                <p style="margin:0;font-family:${SERIF};font-size:16px;color:${C.cream};">Con amor, Bronza 🤎</p>
+                <p style="margin:10px 0 0;font-family:${SANS};font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${C.nude};">Bronzate · Brilla · Viví</p>
+              </td>
+            </tr>
+
+            <!-- Pie -->
+            <tr>
+              <td class="px" align="center" style="padding:40px 40px 44px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr><td style="border-top:1px solid ${C.hair};font-size:0;line-height:0;">&nbsp;</td></tr>
+                </table>
+                <p style="margin:22px 0 0;font-family:${SANS};font-size:10px;line-height:1.8;color:${C.nude};">
+                  Recibís este correo porque tenías productos pendientes en tu carrito de Bronza.<br />
+                  <a href="${esc(unsubscribeUrl)}" style="color:${C.nude};text-decoration:underline;">No quiero recibir más recordatorios</a>
                 </p>
               </td>
             </tr>
+
           </table>
         </td>
       </tr>
@@ -145,21 +203,24 @@ export function renderAbandonedCartEmail({ cart, recoveryUrl, unsubscribeUrl }) 
 </html>`
 
   const textLines = [
-    '¡Hola, reina! ☀️',
+    'BRONZA · TEMPORADA 2027',
     '',
+    '¡Te quedó algo lindo por acá!',
+    'Tu verano te está esperando.',
+    '',
+    'Hola, reina 🤎',
     'Vimos que dejaste algunas de tus bikinis favoritas en el carrito y no queremos que te quedes sin ellas.',
     'Tu próximo look de verano está a un pasito de ser tuyo. 🌊',
     '',
     ...items.map(
       (item) =>
-        `${item.name} x${item.qty}${
-          optionsText(item) ? ` (${optionsText(item)})` : ''
-        } — ${formatMoney(Number(item.price) * Number(item.qty))}`,
+        `${item.name} x${item.qty}${opts(item) ? ` (${opts(item)})` : ''} — ${money(Number(item.price) * Number(item.qty))}`,
     ),
     '',
-    `Total: ${formatMoney(total)}`,
+    `Total: ${money(total)}`,
     '',
-    `Volvé a tu carrito: ${recoveryUrl}`,
+    'Volvé a tu carrito y completá tu compra:',
+    recoveryUrl,
     '',
     'Con amor, Bronza 🤎',
     'Bronzate. Brilla. Viví.',
