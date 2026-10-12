@@ -2,11 +2,11 @@ import { Router } from 'express'
 import { isValidObjectId } from 'mongoose'
 import { Order } from '../models/Order.js'
 import { Cart } from '../models/Cart.js'
-import { Product } from '../models/Product.js'
 import { PendingCheckout } from '../models/PendingCheckout.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
 import { sendOrderConfirmationEmail } from '../lib/email.js'
+import { applyStockAdjustment } from '../lib/stock.js'
 
 const router = Router()
 
@@ -37,49 +37,6 @@ function sanitizeOrderItems(rawItems) {
     })
   }
   return items
-}
-
-/** Resuelve el _id del producto de un ítem (campo productId o prefijo del id). */
-function resolveProductId(item) {
-  const fromField = typeof item?.productId === 'string' ? item.productId : ''
-  const fromId = String(item?.id ?? '').split('-')[0]
-  return [fromField, fromId].find((id) => isValidObjectId(id)) || null
-}
-
-/**
- * Descuenta del stock los productos de un pedido (color + talle).
- * Se ejecuta una sola vez por pedido (ver `stockAdjusted`).
- */
-async function decrementStockForOrder(order) {
-  for (const item of order.items ?? []) {
-    const productId = resolveProductId(item)
-    if (!productId) continue
-    const product = await Product.findById(productId).catch(() => null)
-    if (!product || !product.variants?.length) continue
-
-    const wanted = (item.color ?? '').trim().toLowerCase()
-    let variant = product.variants.find(
-      (v) => (v.color ?? '').trim().toLowerCase() === wanted,
-    )
-    if (!variant && product.variants.length === 1) variant = product.variants[0]
-    if (!variant || !variant.stock) continue
-
-    const size = (item.size ?? '').trim()
-    const qty = Number(item.quantity) || 0
-    if (!size || qty <= 0) continue
-
-    const current = Number(variant.stock.get(size) ?? 0)
-    variant.stock.set(size, Math.max(0, current - qty))
-    await product.save()
-  }
-}
-
-/** Si el pedido quedó aprobado, descuenta stock una única vez. */
-async function applyStockAdjustment(order) {
-  if (order.status !== 'approved' || order.stockAdjusted) return
-  await decrementStockForOrder(order)
-  order.stockAdjusted = true
-  await order.save()
 }
 
 const VALID_STATUSES = [
@@ -261,7 +218,6 @@ router.patch('/confirm', requireAuth, async (req, res) => {
     await applyStockAdjustment(order).catch((err) =>
       console.error('[orders] no se pudo descontar stock:', err),
     )
-
     const mail = await sendOrderConfirmationEmail({
       to: req.user.email,
       order,
@@ -302,7 +258,7 @@ router.patch('/admin/:id/status', requireAdmin, async (req, res) => {
     ).populate('userId', 'name email')
     if (!order) return res.status(404).json({ error: 'Orden no encontrada.' })
 
-    // Al marcar el pago como realizado ("approved") se descuenta el stock.
+    // Si el pago quedó realizado (approved/shipped/delivered) se descuenta el stock.
     await applyStockAdjustment(order).catch((err) =>
       console.error('[orders] no se pudo descontar stock:', err),
     )
