@@ -5,7 +5,7 @@ import { Cart } from '../models/Cart.js'
 import { PendingCheckout } from '../models/PendingCheckout.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
-import { sendOrderPaidEmail } from '../lib/email.js'
+import { sendOrderConfirmationEmail, sendOrderPaidEmail } from '../lib/email.js'
 import { applyStockAdjustment, PAID_STATUSES } from '../lib/stock.js'
 
 const router = Router()
@@ -117,6 +117,15 @@ router.post('/transfer', requireAuth, async (req, res) => {
         { token: order.cartToken },
         { $set: { status: 'completed', reminderSentAt: new Date() } },
       ).catch((err) => console.error('[orders] no se pudo completar carrito:', err))
+    }
+
+    // Correo de "¡Gracias por tu compra!" al confirmar el pedido.
+    const mail = await sendOrderConfirmationEmail({
+      to: req.user.email,
+      order,
+    }).catch((err) => ({ ok: false, error: err?.message }))
+    if (!mail.ok && !mail.skipped) {
+      console.error('[orders] no se pudo enviar el correo de compra:', mail.error)
     }
 
     return res.status(201).json({ order })
