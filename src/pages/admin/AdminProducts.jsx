@@ -179,20 +179,22 @@ function ProductModal({ open, product, onClose, onSave, token }) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider mb-2">Talles</label>
-            <div className="flex gap-3">
-              {AVAILABLE_SIZES.map(size => (
-                <button key={size} type="button" onClick={() => toggleSize(size)}
-                  className={`min-w-[48px] py-2 px-4 rounded-lg text-sm font-bold uppercase transition-all border
-                    ${form.sizes.includes(size)
-                      ? 'bg-text-main text-background-light border-text-main'
-                      : 'bg-white border-accent-muted/60 hover:border-primary'}`}>
-                  {size}
-                </button>
-              ))}
+          {form.variants.length === 0 && (
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-2">Talles</label>
+              <div className="flex gap-3">
+                {AVAILABLE_SIZES.map(size => (
+                  <button key={size} type="button" onClick={() => toggleSize(size)}
+                    className={`min-w-[48px] py-2 px-4 rounded-lg text-sm font-bold uppercase transition-all border
+                      ${form.sizes.includes(size)
+                        ? 'bg-text-main text-background-light border-text-main'
+                        : 'bg-white border-accent-muted/60 hover:border-primary'}`}>
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="border-t border-accent-muted/30 pt-4">
             <div className="flex items-center justify-between mb-3">
@@ -265,21 +267,26 @@ function ProductModal({ open, product, onClose, onSave, token }) {
                   </div>
                 )}
 
-                {form.sizes.length > 0 && (
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Stock por talle</label>
-                    <div className="flex flex-wrap gap-2">
-                      {form.sizes.map(size => (
-                        <div key={size} className="flex items-center gap-1">
-                          <span className="text-xs font-bold uppercase">{size}:</span>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Talles y stock</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {AVAILABLE_SIZES.map(size => {
+                      const selected = form.sizes.includes(size)
+                      return (
+                        <div key={size}
+                          className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors
+                            ${selected ? 'border-primary bg-primary/5' : 'border-accent-muted/60 bg-white'}`}>
+                          <input type="checkbox" checked={selected} onChange={() => toggleSize(size)}
+                            className="h-4 w-4 accent-primary cursor-pointer" />
+                          <span className="text-xs font-bold uppercase w-5">{size}</span>
                           <input type="number" min="0" value={variant.stock[size] ?? ''} placeholder="0"
                             onChange={e => updateVariantStock(idx, size, e.target.value)}
-                            className="w-16 rounded border border-accent-muted/60 bg-white px-2 py-1 text-xs text-center focus:outline-none focus:border-primary" />
+                            className="w-14 rounded border border-accent-muted/60 bg-white px-2 py-1 text-xs text-center focus:outline-none focus:border-primary" />
                         </div>
-                      ))}
-                    </div>
+                      )
+                    })}
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
