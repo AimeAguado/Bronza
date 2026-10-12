@@ -47,6 +47,7 @@ router.post('/preference', requireAuth, async (req, res) => {
     })
     orderItems.push({
       id,
+      productId: typeof raw.productId === 'string' ? raw.productId : '',
       title,
       quantity: Math.floor(quantity),
       unit_price,

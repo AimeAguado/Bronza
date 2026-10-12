@@ -6,6 +6,7 @@ const orderSchema = new Schema(
     items: [
       {
         id: String,
+        productId: String,
         title: String,
         quantity: Number,
         unit_price: Number,
@@ -37,6 +38,8 @@ const orderSchema = new Schema(
       default: 'mercadopago',
     },
     delivery: { type: String, default: 'A coordinar' },
+    // Evita descontar el stock dos veces si el pedido vuelve a "approved".
+    stockAdjusted: { type: Boolean, default: false },
     preferenceId: String,
     paymentId: String,
   },

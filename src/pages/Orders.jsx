@@ -105,7 +105,7 @@ export default function Orders() {
   function handleContinuePayment(order) {
     const items = order.items.map((item) => ({
       id: item.id ?? item._id,
-      productId: item.id ?? item._id,
+      productId: item.productId ?? String(item.id ?? item._id ?? '').split('-')[0],
       name: item.title,
       price: item.unit_price,
       image: item.image ?? '',

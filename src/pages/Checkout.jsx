@@ -100,6 +100,7 @@ const Checkout = () => {
 
       const items = cart.map((item) => ({
         id: String(item.id),
+        productId: item.productId ?? '',
         title: item.name,
         quantity: item.qty,
         unit_price: item.price,
@@ -171,6 +172,7 @@ const Checkout = () => {
     try {
       const items = cart.map((item) => ({
         id: String(item.id),
+        productId: item.productId ?? '',
         title: item.name,
         quantity: item.qty,
         unit_price: item.price,
