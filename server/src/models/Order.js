@@ -40,6 +40,9 @@ const orderSchema = new Schema(
     delivery: { type: String, default: 'A coordinar' },
     // Evita descontar el stock dos veces si el pedido vuelve a "approved".
     stockAdjusted: { type: Boolean, default: false },
+    // Control de envíos de correo (evita duplicados).
+    paidEmailSentAt: { type: Date, default: null },
+    paymentReminderSentAt: { type: Date, default: null },
     preferenceId: String,
     paymentId: String,
   },

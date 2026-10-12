@@ -5,13 +5,37 @@ import { Cart } from '../models/Cart.js'
 import { PendingCheckout } from '../models/PendingCheckout.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireAdmin } from '../middleware/requireAdmin.js'
-import { sendOrderConfirmationEmail } from '../lib/email.js'
-import { applyStockAdjustment } from '../lib/stock.js'
+import { sendOrderPaidEmail } from '../lib/email.js'
+import { applyStockAdjustment, PAID_STATUSES } from '../lib/stock.js'
 
 const router = Router()
 
 function orderNumberFromId(id) {
   return String(id).slice(-6).toUpperCase()
+}
+
+/**
+ * Envía el correo "¡Ya recibimos tu pago!" una única vez, cuando el pedido
+ * está en un estado de pago realizado. Requiere email (directo o del usuario).
+ */
+async function sendPaidEmailIfNeeded(order, { email, name } = {}) {
+  if (!order || !PAID_STATUSES.includes(order.status) || order.paidEmailSentAt) {
+    return
+  }
+  const to = email || order.userId?.email
+  const who = name || order.userId?.name
+  if (!to) return
+
+  const mail = await sendOrderPaidEmail({ to, order, name: who }).catch((err) => ({
+    ok: false,
+    error: err?.message,
+  }))
+  if (mail.ok) {
+    order.paidEmailSentAt = new Date()
+    await order.save()
+  } else if (!mail.skipped) {
+    console.error('[orders] no se pudo enviar el correo de pago:', mail.error)
+  }
 }
 
 function sanitizeOrderItems(rawItems) {
@@ -93,14 +117,6 @@ router.post('/transfer', requireAuth, async (req, res) => {
         { token: order.cartToken },
         { $set: { status: 'completed', reminderSentAt: new Date() } },
       ).catch((err) => console.error('[orders] no se pudo completar carrito:', err))
-    }
-
-    const mail = await sendOrderConfirmationEmail({
-      to: req.user.email,
-      order,
-    }).catch((err) => ({ ok: false, error: err?.message }))
-    if (!mail.ok && !mail.skipped) {
-      console.error('[orders] no se pudo enviar el correo de confirmación:', mail.error)
     }
 
     return res.status(201).json({ order })
@@ -218,13 +234,12 @@ router.patch('/confirm', requireAuth, async (req, res) => {
     await applyStockAdjustment(order).catch((err) =>
       console.error('[orders] no se pudo descontar stock:', err),
     )
-    const mail = await sendOrderConfirmationEmail({
-      to: req.user.email,
-      order,
-    }).catch((err) => ({ ok: false, error: err?.message }))
-    if (!mail.ok && !mail.skipped) {
-      console.error('[orders] no se pudo enviar el correo de confirmación:', mail.error)
-    }
+
+    // Avisamos al usuario que ya recibimos su pago.
+    await sendPaidEmailIfNeeded(order, {
+      email: req.user.email,
+      name: req.user.name,
+    })
 
     return res.json({ order })
   } catch (e) {
@@ -262,6 +277,9 @@ router.patch('/admin/:id/status', requireAdmin, async (req, res) => {
     await applyStockAdjustment(order).catch((err) =>
       console.error('[orders] no se pudo descontar stock:', err),
     )
+
+    // Avisamos al usuario que ya recibimos su pago (una única vez).
+    await sendPaidEmailIfNeeded(order)
 
     return res.json({ order })
   } catch (e) {
